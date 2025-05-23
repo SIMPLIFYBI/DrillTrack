@@ -8,55 +8,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .borehole-container {
-            display: flex;
             position: relative;
-            margin-left: 80px; /* Space for depth scale */
+            margin-left: 60px;
             height: 100%;
-            width: 100%;
+            width: calc(100% - 60px);
         }
-        .depth-marker {
+        
+        .depth-scale {
             position: absolute;
             left: -60px;
-            transform: translateY(-50%);
-            font-size: 0.75rem;
-            color: #555;
+            width: 60px;
+            height: 100%;
+            border-right: 1px solid #e5e7eb;
+            background-color: #f9fafb;
         }
-        .material-label-left {
+        
+        .depth-marker {
             position: absolute;
-            left: -120px;
+            right: 8px;
             font-size: 0.75rem;
             color: #555;
-            white-space: nowrap;
-            text-align: right;
-            width: 110px;
         }
-        .construction-label-right {
+        
+        .geology-left, .geology-right {
             position: absolute;
-            right: -120px;
-            font-size: 0.75rem;
-            color: #555;
-            white-space: nowrap;
-            width: 110px;
+            height: 100%;
+            background-color: #f9fafb;
         }
+        
+        .geology-left {
+            left: 0;
+            width: calc(50% - 30px);
+        }
+        
+        .geology-right {
+            right: 0;
+            width: calc(50% - 30px);
+        }
+        
+        .bore-construction {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 100%;
+            z-index: 2;
+        }
+        
+        .water-level {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            z-index: 3;
+        }
+        
         .layer-segment {
-            height: 10px;
-            transition: all 0.2s ease;
             position: relative;
-            overflow: hidden;
             width: 100%;
+            transition: all 0.2s ease;
         }
+        
         .layer-segment:hover {
             opacity: 0.8;
         }
-        .color-preview {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-right: 8px;
-            vertical-align: middle;
-            border: 1px solid #ddd;
-        }
+        
         .segment-label {
             position: absolute;
             left: 50%;
@@ -66,104 +82,66 @@
             color: white;
             text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: calc(100% - 8px);
             pointer-events: none;
         }
-        .schematic-container {
-            height: 600px;
-            overflow-y: auto;
-            border: 1px solid #e5e7eb;
-            position: relative;
-            background-color: #f9fafb;
-        }
-        .auto-sizing-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100%;
-            position: relative;
-        }
-        .depth-range {
-            font-size: 0.6rem;
-            display: block;
-            margin-top: 2px;
-            color: rgba(255,255,255,0.8);
-        }
-        .depth-scale-container {
+        
+        .water-level-label {
             position: absolute;
-            left: 0;
-            height: 100%;
-            width: 40px;
-            border-right: 1px solid #e5e7eb;
-            background-color: #f9fafb;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #0077FF;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+            white-space: nowrap;
+            background-color: rgba(255,255,255,0.7);
+            padding: 0 4px;
+            border-radius: 3px;
         }
-        .major-depth-marker {
+        
+        .right-label {
             position: absolute;
-            left: 0;
-            width: 40px;
-            text-align: right;
-            padding-right: 8px;
+            right: -120px;
             font-size: 0.75rem;
-            color: #333;
-            font-weight: 500;
+            color: #555;
+            white-space: nowrap;
+            width: 110px;
         }
         
-        /* Bore construction styles */
-        .bore-construction {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 100%;
-            z-index: 2;
-        }
-        .geology-left {
-            position: absolute;
-            left: 0;
-            width: calc(50% - 30px);
-            height: 100%;
-            z-index: 1;
-        }
-        .geology-right {
-            position: absolute;
-            right: 0;
-            width: calc(50% - 30px);
-            height: 100%;
-            z-index: 1;
-        }
-        .water-level {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px; /* Same as bore construction */
-            z-index: 3;
-            background-color: rgba(0, 119, 255, 0.3);
-            border-left: 1px solid rgba(0, 119, 255, 0.7);
-            border-right: 1px solid rgba(0, 119, 255, 0.7);
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 1px solid #ddd;
         }
         
-        /* Crosshatching patterns */
+        /* Construction patterns */
         .headworks-pattern {
             background-color: #8B4513;
             background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
             background-size: 10px 10px;
         }
+        
         .surface-casing-pattern {
             background-color: #A0522D;
             background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
             background-size: 10px 10px;
         }
+        
         .blank-casing-pattern {
             background-color: #CD853F;
             background-image: linear-gradient(0deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
             background-size: 10px 10px;
         }
+        
         .slotted-casing-1-pattern {
             background-color: #D2691E;
             background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
             background-size: 10px 10px;
         }
+        
         .screens-pattern {
             background-color: #B8860B;
             background-image: 
@@ -171,16 +149,19 @@
                 linear-gradient(-45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
             background-size: 10px 10px;
         }
+        
         .slotted-casing-2-pattern {
             background-color: #DAA520;
             background-image: linear-gradient(0deg, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 6px, transparent 6px);
             background-size: 10px 10px;
         }
+        
         .sump-pattern {
             background-color: #F4A460;
             background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 6px, transparent 6px);
             background-size: 10px 10px;
         }
+        
         .endcap-pattern {
             background-color: #BC8F8F;
             background-image: 
@@ -356,22 +337,23 @@
                     </div>
                 </div>
                 
-                <div class="border rounded-md p-4 bg-gray-50 schematic-container">
-                    <div class="auto-sizing-container">
-                        <div class="flex items-start relative h-full">
-                            <!-- Depth Scale (now on far left) -->
-                            <div id="depthScale" class="depth-scale-container">
-                                <!-- Major depth markers will be added here -->
-                            </div>
+                <div class="border rounded-md p-4 bg-gray-50">
+                    <div class="relative" style="height: 600px; overflow-y: auto;">
+                        <div class="borehole-container">
+                            <!-- Depth scale on the left -->
+                            <div id="depthScale" class="depth-scale"></div>
                             
-                            <!-- Borehole Container -->
-                            <div id="boreholeContainer" class="borehole-container">
-                                <!-- Geology will be on the left, construction in the middle, geology on the right -->
-                                <div id="geologyLeft" class="geology-left"></div>
-                                <div id="boreConstruction" class="bore-construction"></div>
-                                <div id="waterLevel" class="water-level"></div>
-                                <div id="geologyRight" class="geology-right"></div>
-                            </div>
+                            <!-- Geology on the left -->
+                            <div id="geologyLeft" class="geology-left"></div>
+                            
+                            <!-- Bore construction in the center -->
+                            <div id="boreConstruction" class="bore-construction"></div>
+                            
+                            <!-- Water level -->
+                            <div id="waterLevel" class="water-level"></div>
+                            
+                            <!-- Geology on the right -->
+                            <div id="geologyRight" class="geology-right"></div>
                         </div>
                     </div>
                 </div>
@@ -413,7 +395,7 @@
             const clearAllConstructionBtn = document.getElementById('clearAllConstruction');
             const constructionList = document.getElementById('constructionList');
             
-            const boreholeContainer = document.getElementById('boreholeContainer');
+            const boreholeContainer = document.querySelector('.borehole-container');
             const geologyLeft = document.getElementById('geologyLeft');
             const boreConstruction = document.getElementById('boreConstruction');
             const waterLevel = document.getElementById('waterLevel');
@@ -809,7 +791,7 @@
                                            class="construction-edit-input h-8 w-8">
                                     <button class="delete-construction text-red-500 hover:text-red-700" data-id="${construction.id}">
                                         <i class="fas fa-trash-alt"></i>
-                                    button>
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -880,26 +862,23 @@
                 // Generate segments (0.5m each)
                 const segmentCount = totalHoleDepth * 2;
                 const containerHeight = segmentCount * segmentHeight;
+                
+                // Set container heights
                 boreholeContainer.style.height = `${containerHeight}px`;
                 geologyLeft.style.height = `${containerHeight}px`;
                 boreConstruction.style.height = `${containerHeight}px`;
                 waterLevel.style.height = `${containerHeight}px`;
                 geologyRight.style.height = `${containerHeight}px`;
+                depthScale.style.height = `${containerHeight}px`;
                 
                 // Create major depth markers (every 10m)
                 for (let i = 0; i <= totalHoleDepth; i += 10) {
                     const markerPosition = i * 2 * segmentHeight;
                     const marker = document.createElement('div');
-                    marker.className = 'major-depth-marker';
+                    marker.className = 'depth-marker';
                     marker.style.top = `${markerPosition}px`;
                     marker.textContent = `${i}`;
                     depthScale.appendChild(marker);
-                    
-                    // Add a horizontal line across the borehole at each major marker
-                    const line = document.createElement('div');
-                    line.className = 'absolute left-0 right-0 border-t border-gray-300';
-                    line.style.top = `${markerPosition}px`;
-                    boreholeContainer.appendChild(line);
                 }
                 
                 // Create geology segments (left side)
@@ -916,25 +895,8 @@
                     
                     if (matchingLayer) {
                         segment.style.backgroundColor = hexToRgba(matchingLayer.color, 0.8);
-                        
-                        // Add material label in the center of the layer
-                        const layerMiddleDepth = (matchingLayer.fromDepth + matchingLayer.toDepth) / 2;
-                        if (Math.abs(currentDepth - layerMiddleDepth) < 0.25) {
-                            // Add left label for the layer
-                            const leftLabel = document.createElement('div');
-                            leftLabel.className = 'material-label-left';
-                            leftLabel.style.top = `${i * segmentHeight}px`;
-                            leftLabel.textContent = `${matchingLayer.materialType}`;
-                            geologyLeft.appendChild(leftLabel);
-                            
-                            // Add depth range label
-                            const depthLabel = document.createElement('div');
-                            depthLabel.className = 'text-xs text-gray-500';
-                            depthLabel.textContent = `${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m`;
-                            leftLabel.appendChild(depthLabel);
-                        }
                     } else {
-                        segment.style.backgroundColor = 'rgba(243, 244, 246, 0.8)'; // Default gray for no layer with transparency
+                        segment.style.backgroundColor = 'rgba(243, 244, 246, 0.8)';
                     }
                     
                     geologyLeft.appendChild(segment);
@@ -955,24 +917,24 @@
                     if (matchingLayer) {
                         segment.style.backgroundColor = hexToRgba(matchingLayer.color, 0.8);
                         
-                        // Add material label in the center of the layer
+                        // Add right label for the layer (only at the middle of the layer)
                         const layerMiddleDepth = (matchingLayer.fromDepth + matchingLayer.toDepth) / 2;
                         if (Math.abs(currentDepth - layerMiddleDepth) < 0.25) {
-                            // Add right label for the layer
                             const rightLabel = document.createElement('div');
-                            rightLabel.className = 'construction-label-right';
+                            rightLabel.className = 'right-label';
                             rightLabel.style.top = `${i * segmentHeight}px`;
                             rightLabel.textContent = `${matchingLayer.materialType}`;
-                            geologyRight.appendChild(rightLabel);
                             
                             // Add depth range label
                             const depthLabel = document.createElement('div');
                             depthLabel.className = 'text-xs text-gray-500';
                             depthLabel.textContent = `${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m`;
                             rightLabel.appendChild(depthLabel);
+                            
+                            geologyRight.appendChild(rightLabel);
                         }
                     } else {
-                        segment.style.backgroundColor = 'rgba(243, 244, 246, 0.8)'; // Default gray for no layer with transparency
+                        segment.style.backgroundColor = 'rgba(243, 244, 246, 0.8)';
                     }
                     
                     geologyRight.appendChild(segment);
@@ -989,13 +951,15 @@
                         waterContainer.className = 'water-level';
                         waterContainer.style.top = `${fromSegment * segmentHeight}px`;
                         waterContainer.style.height = `${segmentCountWater * segmentHeight}px`;
+                        waterContainer.style.backgroundColor = 'rgba(0, 119, 255, 0.3)';
+                        waterContainer.style.borderLeft = '1px solid rgba(0, 119, 255, 0.7)';
+                        waterContainer.style.borderRight = '1px solid rgba(0, 119, 255, 0.7)';
                         
-                        // Add water level label
+                        // Add water level label at the exact water depth
                         const label = document.createElement('div');
-                        label.className = 'segment-label';
+                        label.className = 'water-level-label';
+                        label.style.top = '0px';
                         label.textContent = 'Water Level';
-                        label.style.color = '#0077FF';
-                        label.style.textShadow = '1px 1px 1px rgba(255,255,255,0.5)';
                         waterContainer.appendChild(label);
                         
                         waterLevel.appendChild(waterContainer);
@@ -1011,14 +975,17 @@
                     if (segmentCount <= 0) return;
                     
                     const constructionContainer = document.createElement('div');
-                    constructionContainer.className = `absolute left-0 right-0 ${getConstructionPatternClass(construction.constructionType)}`;
+                    constructionContainer.className = `absolute ${getConstructionPatternClass(construction.constructionType)}`;
                     constructionContainer.style.top = `${fromSegment * segmentHeight}px`;
                     constructionContainer.style.height = `${segmentCount * segmentHeight}px`;
+                    constructionContainer.style.width = '60px';
+                    constructionContainer.style.left = '50%';
+                    constructionContainer.style.transform = 'translateX(-50%)';
                     constructionContainer.style.backgroundColor = construction.color;
                     constructionContainer.style.borderLeft = '2px solid rgba(0,0,0,0.2)';
                     constructionContainer.style.borderRight = '2px solid rgba(0,0,0,0.2)';
                     
-                    // Add construction label
+                    // Add construction label in the middle of the construction element
                     const label = document.createElement('div');
                     label.className = 'segment-label';
                     label.textContent = construction.constructionType;
