@@ -7,10 +7,546 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS styles omitted for brevity, already included in the original input */
+        .borehole-column {
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #333;
+            position: relative;
+        }
+        .depth-marker {
+            position: absolute;
+            left: -40px;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: #555;
+        }
+        .material-label-center {
+            position: absolute;
+            right: -120px;
+            font-size: 0.75rem;
+            color: #555;
+            white-space: nowrap;
+        }
+        .layer-segment {
+            height: 20px;
+            border-right: 1px solid rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .layer-segment:hover {
+            opacity: 0.8;
+            transform: scaleX(1.05);
+        }
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 1px solid #ddd;
+        }
+        .segment-label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.6rem;
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: calc(100% - 8px);
+            pointer-events: none;
+        }
+        .schematic-container {
+            height: calc(100vh - 400px);
+            min-height: 400px;
+            max-height: 700px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+        }
+        .auto-sizing-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+        .depth-range {
+            font-size: 0.6rem;
+            display: block;
+            margin-top: 2px;
+            color: rgba(255,255,255,0.8);
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Body content omitted for brevity, already included in the original input -->
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Borehole Schematic Generator</h1>
+            <p class="text-gray-600">Visualize geological layers in a borehole based on your input data</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Input Form -->
+            <div class="bg-white rounded-lg shadow p-6 lg:col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Layer Information</h2>
+                
+                <form id="layerForm" class="space-y-4">
+                    <div>
+                        <label for="totalHoleDepth" class="block text-sm font-medium text-gray-700 mb-1">Total Hole Depth (m)</label>
+                        <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    </div>
+                    
+                    <div>
+                        <label for="fromDepth" class="block text-sm font-medium text-gray-700 mb-1">From Depth (m)</label>
+                        <input type="number" id="fromDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    </div>
+                    
+                    <div>
+                        <label for="toDepth" class="block text-sm font-medium text-gray-700 mb-1">To Depth (m)</label>
+                        <input type="number" id="toDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    </div>
+                    
+                    <div>
+                        <label for="materialType" class="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
+                        <select id="materialType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            <option value="" disabled selected>Select a material type</option>
+                            <option value="Detritals" data-color="#FF5733">Detritals</option>
+                            <option value="Pisolites" data-color="#33FF57">Pisolites</option>
+                            <option value="Calcrete" data-color="#3357FF">Calcrete</option>
+                            <option value="Clay" data-color="#F0FF33">Clay</option>
+                            <option value="Channel Iron Deposits" data-color="#FF33F0">Channel Iron Deposits</option>
+                            <option value="Footwall Zone" data-color="#33FFF0">Footwall Zone</option>
+                            <option value="Example 1" data-color="#8A33FF">Example 1</option>
+                            <option value="Example 2" data-color="#FF8A33">Example 2</option>
+                            <option value="Example 3" data-color="#33FF8A">Example 3</option>
+                            <option value="Boolgeeda Iron Formation" data-color="#FF338A">Boolgeeda Iron Formation</option>
+                            <option value="Woongarra Rhyolite" data-color="#8AFF33">Woongarra Rhyolite</option>
+                            <option value="Weeli Wolli Formation" data-color="#338AFF">Weeli Wolli Formation</option>
+                            <option value="Brockman Iron Formation" data-color="#FF5733">Brockman Iron Formation</option>
+                            <option value="Mt McRae Shale" data-color="#57FF33">Mt McRae Shale</option>
+                            <option value="Mt Sylvia Formation" data-color="#3357FF">Mt Sylvia Formation</option>
+                            <option value="Wittenoom Formation" data-color="#F0FF33">Wittenoom Formation</option>
+                            <option value="Marra Mamba Formation" data-color="#FF33F0">Marra Mamba Formation</option>
+                            <option value="Yandicoogina Shale Member" data-color="#33FFF0">Yandicoogina Shale Member</option>
+                            <option value="Joffre Member" data-color="#8A33FF">Joffre Member</option>
+                            <option value="Mt Whaleback Shale Member" data-color="#FF8A33">Mt Whaleback Shale Member</option>
+                            <option value="Dales Gorge Member" data-color="#33FF8A">Dales Gorge Member</option>
+                            <option value="Bee Gorge Member" data-color="#FF338A">Bee Gorge Member</option>
+                            <option value="Paraburdoo Member" data-color="#8AFF33">Paraburdoo Member</option>
+                            <option value="West Angela Member" data-color="#338AFF">West Angela Member</option>
+                            <option value="Mount Newman Formation" data-color="#FF5733">Mount Newman Formation</option>
+                            <option value="MacLeod Member" data-color="#57FF33">MacLeod Member</option>
+                            <option value="Nammuldi Member" data-color="#3357FF">Nammuldi Member</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="layerColor" class="block text-sm font-medium text-gray-700 mb-1">Layer Color</label>
+                        <div class="flex items-center">
+                            <input type="color" id="layerColor" value="#33FF57" class="w-10 h-10 mr-2">
+                            <div id="colorPreview" class="color-preview" style="background-color: #33FF57;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-2">
+                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-layer-group mr-2"></i> Add Layer
+                        </button>
+                        <button type="button" id="clearAll" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="fas fa-trash-alt mr-2"></i> Clear All
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Current Layers</h3>
+                    <div id="layerList" class="border rounded-md divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                        <div class="p-3 text-center text-gray-500">No layers added yet</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Borehole Visualization -->
+            <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Borehole Schematic</h2>
+                    <div class="flex space-x-2">
+                        <button id="zoomIn" class="bg-gray-100 p-2 rounded-md hover:bg-gray-200">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button id="zoomOut" class="bg-gray-100 p-2 rounded-md hover:bg-gray-200">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button id="exportBtn" class="bg-indigo-100 text-indigo-700 p-2 rounded-md hover:bg-indigo-200">
+                            <i class="fas fa-download mr-1"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border rounded-md p-4 bg-gray-50 schematic-container">
+                    <div class="auto-sizing-container">
+                        <div class="flex items-start">
+                            <!-- Depth Scale -->
+                            <div class="mr-4 text-right" style="width: 40px;">
+                                <div class="text-xs font-medium text-gray-500 mb-1">Depth (m)</div>
+                                <div id="depthScale" class="relative"></div>
+                            </div>
+                            
+                            <!-- Borehole Column -->
+                            <div class="flex-1">
+                                <div id="boreholeColumn" class="borehole-column w-24 relative">
+                                    <!-- Borehole segments will be generated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        <span id="totalDepth">Total depth: 30 m</span>
+                    </div>
+                    <div class="text-sm">
+                        <button id="editModeBtn" class="text-indigo-600 hover:text-indigo-800">
+                            <i class="fas fa-edit mr-1"></i> Edit Mode
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const layerForm = document.getElementById('layerForm');
+            const totalHoleDepthInput = document.getElementById('totalHoleDepth');
+            const fromDepthInput = document.getElementById('fromDepth');
+            const toDepthInput = document.getElementById('toDepth');
+            const materialTypeSelect = document.getElementById('materialType');
+            const layerColorInput = document.getElementById('layerColor');
+            const colorPreview = document.getElementById('colorPreview');
+            const clearAllBtn = document.getElementById('clearAll');
+            const layerList = document.getElementById('layerList');
+            const boreholeColumn = document.getElementById('boreholeColumn');
+            const depthScale = document.getElementById('depthScale');
+            const zoomInBtn = document.getElementById('zoomIn');
+            const zoomOutBtn = document.getElementById('zoomOut');
+            const exportBtn = document.getElementById('exportBtn');
+            const editModeBtn = document.getElementById('editModeBtn');
+            const totalDepthSpan = document.getElementById('totalDepth');
+            
+            // State
+            let layers = [];
+            let segmentHeight = 20; // px
+            let isEditMode = false;
+            let totalHoleDepth = parseFloat(totalHoleDepthInput.value);
+            
+            // Material type selection changes color
+            materialTypeSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.dataset.color) {
+                    layerColorInput.value = selectedOption.dataset.color;
+                    colorPreview.style.backgroundColor = selectedOption.dataset.color;
+                }
+            });
+            
+            // Color input changes preview
+            layerColorInput.addEventListener('input', function() {
+                colorPreview.style.backgroundColor = this.value;
+            });
+            
+            // Total hole depth change handler
+            totalHoleDepthInput.addEventListener('change', function() {
+                totalHoleDepth = parseFloat(this.value);
+                if (isNaN(totalHoleDepth) || totalHoleDepth <= 0) {
+                    totalHoleDepth = 30;
+                    this.value = 30;
+                }
+                generateBorehole();
+            });
+            
+            // Form submission
+            layerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const fromDepth = parseFloat(fromDepthInput.value);
+                const toDepth = parseFloat(toDepthInput.value);
+                const materialType = materialTypeSelect.value;
+                const color = layerColorInput.value;
+                
+                if (fromDepth >= toDepth) {
+                    alert('"From Depth" must be less than "To Depth"');
+                    return;
+                }
+                
+                if (toDepth > totalHoleDepth) {
+                    alert('"To Depth" cannot exceed the Total Hole Depth');
+                    return;
+                }
+                
+                if (!materialType) {
+                    alert('Please select a material type');
+                    return;
+                }
+                
+                const newLayer = {
+                    id: Date.now(),
+                    fromDepth,
+                    toDepth,
+                    materialType,
+                    color
+                };
+                
+                layers.push(newLayer);
+                updateLayerList();
+                generateBorehole();
+                
+                // Reset form but pre-populate From Depth with the last To Depth
+                fromDepthInput.value = toDepth;
+                toDepthInput.value = '';
+                materialTypeSelect.selectedIndex = 0;
+                layerColorInput.value = '#33FF57';
+                colorPreview.style.backgroundColor = '#33FF57';
+            });
+            
+            // Clear all layers
+            clearAllBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all layers?')) {
+                    layers = [];
+                    updateLayerList();
+                    generateBorehole();
+                    fromDepthInput.value = '';
+                    toDepthInput.value = '';
+                }
+            });
+            
+            // Zoom controls
+            zoomInBtn.addEventListener('click', function() {
+                if (segmentHeight < 40) {
+                    segmentHeight += 5;
+                    generateBorehole();
+                }
+            });
+            
+            zoomOutBtn.addEventListener('click', function() {
+                if (segmentHeight > 10) {
+                    segmentHeight -= 5;
+                    generateBorehole();
+                }
+            });
+            
+            // Edit mode toggle
+            editModeBtn.addEventListener('click', function() {
+                isEditMode = !isEditMode;
+                editModeBtn.innerHTML = isEditMode 
+                    ? '<i class="fas fa-check mr-1"></i> Save Changes' 
+                    : '<i class="fas fa-edit mr-1"></i> Edit Mode';
+                
+                if (!isEditMode) {
+                    // Save any changes made in edit mode
+                    const editInputs = document.querySelectorAll('.layer-edit-input');
+                    editInputs.forEach(input => {
+                        const layerId = parseInt(input.dataset.layerId);
+                        const property = input.dataset.property;
+                        const value = input.value;
+                        
+                        const layer = layers.find(l => l.id === layerId);
+                        if (layer) {
+                            if (property === 'fromDepth' || property === 'toDepth') {
+                                layer[property] = parseFloat(value);
+                            } else {
+                                layer[property] = value;
+                            }
+                        }
+                    });
+                    
+                    generateBorehole();
+                }
+                
+                updateLayerList();
+            });
+            
+            // Export functionality
+            exportBtn.addEventListener('click', function() {
+                alert('Export functionality would save the borehole schematic as an image or PDF in a real application.');
+            });
+            
+            // Update the layer list display
+            function updateLayerList() {
+                if (layers.length === 0) {
+                    layerList.innerHTML = '<div class="p-3 text-center text-gray-500">No layers added yet</div>';
+                    return;
+                }
+                
+                // Sort layers by depth
+                const sortedLayers = [...layers].sort((a, b) => a.fromDepth - b.fromDepth);
+                
+                layerList.innerHTML = '';
+                
+                sortedLayers.forEach(layer => {
+                    const layerElement = document.createElement('div');
+                    layerElement.className = 'p-3 hover:bg-gray-50 group';
+                    layerElement.dataset.layerId = layer.id;
+                    
+                    if (isEditMode) {
+                        layerElement.innerHTML = `
+                            <div class="grid grid-cols-4 gap-2 items-center">
+                                <div>
+                                    <label class="text-xs text-gray-500 block">From</label>
+                                    <input type="number" step="0.5" value="${layer.fromDepth}" 
+                                           data-layer-id="${layer.id}" data-property="fromDepth"
+                                           class="layer-edit-input w-full text-sm border rounded p-1">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 block">To</label>
+                                    <input type="number" step="0.5" value="${layer.toDepth}" 
+                                           data-layer-id="${layer.id}" data-property="toDepth"
+                                           class="layer-edit-input w-full text-sm border rounded p-1">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 block">Material</label>
+                                    <select data-layer-id="${layer.id}" data-property="materialType"
+                                            class="layer-edit-input w-full text-sm border rounded p-1">
+                                        ${Array.from(materialTypeSelect.options).map(option => 
+                                            `<option value="${option.value}" ${option.value === layer.materialType ? 'selected' : ''}
+                                             ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
+                                                ${option.text}
+                                            </option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                                <div class="flex items-end space-x-2">
+                                    <input type="color" value="${layer.color}" 
+                                           data-layer-id="${layer.id}" data-property="color"
+                                           class="layer-edit-input h-8 w-8">
+                                    <button class="delete-layer text-red-500 hover:text-red-700" data-layer-id="${layer.id}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        layerElement.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="color-preview mr-2" style="background-color: ${layer.color};"></div>
+                                    <div>
+                                        <div class="font-medium">${layer.materialType}</div>
+                                        <div class="text-xs text-gray-500">${layer.fromDepth}m - ${layer.toDepth}m</div>
+                                    </div>
+                                </div>
+                                <button class="delete-layer opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700" data-layer-id="${layer.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                    
+                    layerList.appendChild(layerElement);
+                });
+                
+                // Add delete event listeners
+                document.querySelectorAll('.delete-layer').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const layerId = parseInt(this.dataset.layerId);
+                        layers = layers.filter(layer => layer.id !== layerId);
+                        updateLayerList();
+                        generateBorehole();
+                    });
+                });
+                
+                // Add material type change listeners in edit mode
+                if (isEditMode) {
+                    document.querySelectorAll('select[data-property="materialType"]').forEach(select => {
+                        select.addEventListener('change', function() {
+                            const selectedOption = this.options[this.selectedIndex];
+                            if (selectedOption.dataset.color) {
+                                const layerId = parseInt(this.dataset.layerId);
+                                const layer = layers.find(l => l.id === layerId);
+                                if (layer) {
+                                    layer.color = selectedOption.dataset.color;
+                                }
+                                // Update the color input
+                                const colorInput = document.querySelector(`input[data-layer-id="${layerId}"][data-property="color"]`);
+                                if (colorInput) {
+                                    colorInput.value = selectedOption.dataset.color;
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+            
+            // Generate the borehole visualization
+            function generateBorehole() {
+                // Clear existing borehole
+                boreholeColumn.innerHTML = '';
+                depthScale.innerHTML = '';
+                
+                // Update total depth display
+                totalDepthSpan.textContent = `Total depth: ${totalHoleDepth} m`;
+                
+                // Generate segments (0.5m each)
+                const segmentCount = totalHoleDepth * 2;
+                const containerHeight = segmentCount * segmentHeight;
+                boreholeColumn.style.height = `${containerHeight}px`;
+                depthScale.style.height = `${containerHeight}px`;
+                
+                // Create depth markers (every 5m)
+                for (let i = 0; i <= totalHoleDepth; i += 5) {
+                    const markerPosition = i * 2 * segmentHeight;
+                    const marker = document.createElement('div');
+                    marker.className = 'depth-marker';
+                    marker.style.top = `${markerPosition}px`;
+                    marker.textContent = `${i}m`;
+                    depthScale.appendChild(marker);
+                }
+                
+                // Create borehole segments
+                for (let i = 0; i < segmentCount; i++) {
+                    const currentDepth = i * 0.5;
+                    const segment = document.createElement('div');
+                    segment.className = 'layer-segment';
+                    segment.style.height = `${segmentHeight}px`;
+                    
+                    // Find which layer this segment belongs to
+                    const matchingLayer = layers.find(layer => 
+                        currentDepth >= layer.fromDepth && currentDepth < layer.toDepth
+                    );
+                    
+                    if (matchingLayer) {
+                        segment.style.backgroundColor = matchingLayer.color;
+                        
+                        // Add material label in the center of the layer
+                        const layerMiddleDepth = (matchingLayer.fromDepth + matchingLayer.toDepth) / 2;
+                        if (Math.abs(currentDepth - layerMiddleDepth) < 0.25) {
+                            const label = document.createElement('div');
+                            label.className = 'segment-label';
+                            label.innerHTML = `${matchingLayer.materialType}<span class="depth-range">${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m</span>`;
+                            segment.appendChild(label);
+                            
+                            // Add side label for the layer
+                            const sideLabel = document.createElement('div');
+                            sideLabel.className = 'material-label-center';
+                            sideLabel.style.top = `${(matchingLayer.fromDepth + matchingLayer.toDepth) * segmentHeight}px`;
+                            sideLabel.textContent = `${matchingLayer.materialType} (${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m)`;
+                            boreholeColumn.appendChild(sideLabel);
+                        }
+                    } else {
+                        segment.style.backgroundColor = '#f3f4f6'; // Default gray for no layer
+                    }
+                    
+                    boreholeColumn.appendChild(segment);
+                }
+            }
+            
+            // Initialize the borehole display
+            generateBorehole();
+        });
+    </script>
 </body>
 </html>
