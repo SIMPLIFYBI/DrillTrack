@@ -28,7 +28,7 @@
             white-space: nowrap;
         }
         .layer-segment {
-            height: 20px;
+            height: 10px;
             border-right: 1px solid rgba(0,0,0,0.1);
             transition: all 0.2s ease;
             position: relative;
@@ -62,9 +62,9 @@
             pointer-events: none;
         }
         .schematic-container {
-            height: calc(100vh - 400px);
-            min-height: 400px;
-            max-height: 700px;
+            height: calc(150vh - 200px); /* Increased by 50% */
+            min-height: 900px; /* Increased from 600px */
+            max-height: 1800px; /* Increased from 1200px */
             overflow-y: auto;
             border: 1px solid #e5e7eb;
         }
@@ -78,6 +78,20 @@
             display: block;
             margin-top: 2px;
             color: rgba(255,255,255,0.8);
+        }
+        .depth-scale-container {
+            position: relative;
+            height: 100%;
+        }
+        .major-depth-marker {
+            position: absolute;
+            left: 0;
+            width: 40px;
+            text-align: right;
+            padding-right: 8px;
+            font-size: 0.75rem;
+            color: #333;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -190,9 +204,11 @@
                     <div class="auto-sizing-container">
                         <div class="flex items-start">
                             <!-- Depth Scale -->
-                            <div class="mr-4 text-right" style="width: 40px;">
-                                <div class="text-xs font-medium text-gray-500 mb-1">Depth (m)</div>
-                                <div id="depthScale" class="relative"></div>
+                            <div class="mr-4" style="width: 40px;">
+                                <div class="text-xs font-medium text-gray-500 mb-1 text-right pr-2">Depth (m)</div>
+                                <div id="depthScale" class="depth-scale-container relative">
+                                    <!-- Major depth markers will be added here -->
+                                </div>
                             </div>
                             
                             <!-- Borehole Column -->
@@ -241,7 +257,7 @@
             
             // State
             let layers = [];
-            let segmentHeight = 20; // px
+            let segmentHeight = 10;
             let isEditMode = false;
             let totalHoleDepth = parseFloat(totalHoleDepthInput.value);
             
@@ -326,15 +342,15 @@
             
             // Zoom controls
             zoomInBtn.addEventListener('click', function() {
-                if (segmentHeight < 40) {
-                    segmentHeight += 5;
+                if (segmentHeight < 20) {
+                    segmentHeight += 2;
                     generateBorehole();
                 }
             });
             
             zoomOutBtn.addEventListener('click', function() {
-                if (segmentHeight > 10) {
-                    segmentHeight -= 5;
+                if (segmentHeight > 5) {
+                    segmentHeight -= 2;
                     generateBorehole();
                 }
             });
@@ -433,7 +449,7 @@
                         layerElement.innerHTML = `
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
-                                    <div class="color-preview mr-2" style="background-color: ${layer.color};"></div>
+                                    <div class="color-p preview mr-2" style="background-color: ${layer.color};"></div>
                                     <div>
                                         <div class="font-medium">${layer.materialType}</div>
                                         <div class="text-xs text-gray-500">${layer.fromDepth}m - ${layer.toDepth}m</div>
@@ -494,16 +510,21 @@
                 const segmentCount = totalHoleDepth * 2;
                 const containerHeight = segmentCount * segmentHeight;
                 boreholeColumn.style.height = `${containerHeight}px`;
-                depthScale.style.height = `${containerHeight}px`;
                 
-                // Create depth markers (every 5m)
-                for (let i = 0; i <= totalHoleDepth; i += 5) {
+                // Create major depth markers (every 10m)
+                for (let i = 0; i <= totalHoleDepth; i += 10) {
                     const markerPosition = i * 2 * segmentHeight;
                     const marker = document.createElement('div');
-                    marker.className = 'depth-marker';
+                    marker.className = 'major-depth-marker';
                     marker.style.top = `${markerPosition}px`;
-                    marker.textContent = `${i}m`;
+                    marker.textContent = `${i}`;
                     depthScale.appendChild(marker);
+                    
+                    // Add a horizontal line across the borehole at each major marker
+                    const line = document.createElement('div');
+                    line.className = 'absolute left-0 right-0 border-t border-gray-300';
+                    line.style.top = `${markerPosition}px`;
+                    boreholeColumn.appendChild(line);
                 }
                 
                 // Create borehole segments
