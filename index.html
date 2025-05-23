@@ -12,6 +12,7 @@
             position: relative;
             margin-left: 80px; /* Space for depth scale */
             height: 100%;
+            width: 100%;
         }
         .depth-marker {
             position: absolute;
@@ -42,6 +43,7 @@
             transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
+            width: 100%;
         }
         .layer-segment:hover {
             opacity: 0.8;
@@ -74,11 +76,13 @@
             overflow-y: auto;
             border: 1px solid #e5e7eb;
             position: relative;
+            background-color: #f9fafb;
         }
         .auto-sizing-container {
             display: flex;
             flex-direction: column;
             min-height: 100%;
+            position: relative;
         }
         .depth-range {
             font-size: 0.6rem;
@@ -88,10 +92,11 @@
         }
         .depth-scale-container {
             position: absolute;
-            left: -60px;
+            left: 0;
             height: 100%;
             width: 40px;
             border-right: 1px solid #e5e7eb;
+            background-color: #f9fafb;
         }
         .major-depth-marker {
             position: absolute;
@@ -106,22 +111,36 @@
         
         /* Bore construction styles */
         .bore-construction {
-            position: relative;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
             width: 60px;
-            margin: 0 auto;
+            height: 100%;
             z-index: 2;
         }
         .geology-left {
             position: absolute;
             left: 0;
             width: calc(50% - 30px);
+            height: 100%;
             z-index: 1;
         }
         .geology-right {
             position: absolute;
             right: 0;
             width: calc(50% - 30px);
+            height: 100%;
             z-index: 1;
+        }
+        .water-level {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px; /* Same as bore construction */
+            z-index: 3;
+            background-color: rgba(0, 119, 255, 0.3);
+            border-left: 1px solid rgba(0, 119, 255, 0.7);
+            border-right: 1px solid rgba(0, 119, 255, 0.7);
         }
         
         /* Crosshatching patterns */
@@ -187,6 +206,11 @@
                     <div>
                         <label for="totalHoleDepth" class="block text-sm font-medium text-gray-700 mb-1">Total Hole Depth (m)</label>
                         <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    </div>
+                    
+                    <div>
+                        <label for="waterDepth" class="block text-sm font-medium text-gray-700 mb-1">Water Depth (m)</label>
+                        <input type="number" id="waterDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     
                     <div>
@@ -334,17 +358,18 @@
                 
                 <div class="border rounded-md p-4 bg-gray-50 schematic-container">
                     <div class="auto-sizing-container">
-                        <div class="flex items-start relative">
+                        <div class="flex items-start relative h-full">
                             <!-- Depth Scale (now on far left) -->
                             <div id="depthScale" class="depth-scale-container">
                                 <!-- Major depth markers will be added here -->
                             </div>
                             
                             <!-- Borehole Container -->
-                            <div id="boreholeContainer" class="borehole-container flex-1 relative">
+                            <div id="boreholeContainer" class="borehole-container">
                                 <!-- Geology will be on the left, construction in the middle, geology on the right -->
                                 <div id="geologyLeft" class="geology-left"></div>
                                 <div id="boreConstruction" class="bore-construction"></div>
+                                <div id="waterLevel" class="water-level"></div>
                                 <div id="geologyRight" class="geology-right"></div>
                             </div>
                         </div>
@@ -370,6 +395,7 @@
             // DOM Elements
             const layerForm = document.getElementById('layerForm');
             const totalHoleDepthInput = document.getElementById('totalHoleDepth');
+            const waterDepthInput = document.getElementById('waterDepth');
             const fromDepthInput = document.getElementById('fromDepth');
             const toDepthInput = document.getElementById('toDepth');
             const materialTypeSelect = document.getElementById('materialType');
@@ -390,6 +416,7 @@
             const boreholeContainer = document.getElementById('boreholeContainer');
             const geologyLeft = document.getElementById('geologyLeft');
             const boreConstruction = document.getElementById('boreConstruction');
+            const waterLevel = document.getElementById('waterLevel');
             const geologyRight = document.getElementById('geologyRight');
             const depthScale = document.getElementById('depthScale');
             const zoomInBtn = document.getElementById('zoomIn');
@@ -404,6 +431,7 @@
             let segmentHeight = 10;
             let isEditMode = false;
             let totalHoleDepth = parseFloat(totalHoleDepthInput.value);
+            let waterDepth = null;
             
             // Material type selection changes color
             materialTypeSelect.addEventListener('change', function() {
@@ -438,6 +466,16 @@
                 if (isNaN(totalHoleDepth) || totalHoleDepth <= 0) {
                     totalHoleDepth = 30;
                     this.value = 30;
+                }
+                generateBorehole();
+            });
+            
+            // Water depth change handler
+            waterDepthInput.addEventListener('change', function() {
+                waterDepth = parseFloat(this.value);
+                if (isNaN(waterDepth) || waterDepth <= 0) {
+                    waterDepth = null;
+                    this.value = '';
                 }
                 generateBorehole();
             });
@@ -681,9 +719,9 @@
                                 </div>
                                 <button class="delete-layer opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700" data-id="${layer.id}">
                                     <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            `;
+                                </button>
+                            </div>
+                        `;
                     }
                     
                     layerList.appendChild(layerElement);
@@ -771,7 +809,7 @@
                                            class="construction-edit-input h-8 w-8">
                                     <button class="delete-construction text-red-500 hover:text-red-700" data-id="${construction.id}">
                                         <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                    button>
                                 </div>
                             </div>
                         `;
@@ -832,6 +870,7 @@
                 // Clear existing borehole
                 geologyLeft.innerHTML = '';
                 boreConstruction.innerHTML = '';
+                waterLevel.innerHTML = '';
                 geologyRight.innerHTML = '';
                 depthScale.innerHTML = '';
                 
@@ -844,6 +883,7 @@
                 boreholeContainer.style.height = `${containerHeight}px`;
                 geologyLeft.style.height = `${containerHeight}px`;
                 boreConstruction.style.height = `${containerHeight}px`;
+                waterLevel.style.height = `${containerHeight}px`;
                 geologyRight.style.height = `${containerHeight}px`;
                 
                 // Create major depth markers (every 10m)
@@ -936,6 +976,30 @@
                     }
                     
                     geologyRight.appendChild(segment);
+                }
+                
+                // Add water level if specified
+                if (waterDepth !== null && waterDepth < totalHoleDepth) {
+                    const fromSegment = Math.floor(waterDepth * 2);
+                    const toSegment = segmentCount;
+                    const segmentCountWater = toSegment - fromSegment;
+                    
+                    if (segmentCountWater > 0) {
+                        const waterContainer = document.createElement('div');
+                        waterContainer.className = 'water-level';
+                        waterContainer.style.top = `${fromSegment * segmentHeight}px`;
+                        waterContainer.style.height = `${segmentCountWater * segmentHeight}px`;
+                        
+                        // Add water level label
+                        const label = document.createElement('div');
+                        label.className = 'segment-label';
+                        label.textContent = 'Water Level';
+                        label.style.color = '#0077FF';
+                        label.style.textShadow = '1px 1px 1px rgba(255,255,255,0.5)';
+                        waterContainer.appendChild(label);
+                        
+                        waterLevel.appendChild(waterContainer);
+                    }
                 }
                 
                 // Add construction elements (center)
