@@ -204,6 +204,24 @@
                 linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
             background-size: 5px 5px;
         }
+        
+        .ground-level {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-top: 2px dashed #555;
+            z-index: 10;
+        }
+        
+        .ground-level-label {
+            position: absolute;
+            left: -60px;
+            font-size: 0.7rem;
+            color: #555;
+            background-color: rgba(255,255,255,0.7);
+            padding: 0 4px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -213,6 +231,34 @@
             <p class="text-gray-600">Visualize geological layers and construction details in a borehole</p>
         </header>
 
+        <!-- Borehole Details Container -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Borehole Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                    <label for="holeType" class="block text-sm font-medium text-gray-700 mb-1">Hole Type</label>
+                    <select id="holeType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="Hydrogeology">Hydrogeology</option>
+                        <option value="Diamond Drilling">Diamond Drilling</option>
+                        <option value="RC Drilling">RC Drilling</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="totalHoleDepth" class="block text-sm font-medium text-gray-700 mb-1">Total Depth (m)</label>
+                    <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div>
+                    <label for="waterDepth" class="block text-sm font-medium text-gray-700 mb-1">Water Depth (m)</label>
+                    <input type="number" id="waterDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="flex items-end">
+                    <button id="updateBoreholeDetails" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-sync-alt mr-2"></i> Update
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <!-- Layer Information Form -->
             <div class="bg-white rounded-lg shadow p-6">
@@ -220,23 +266,13 @@
                 
                 <form id="layerForm" class="space-y-4">
                     <div>
-                        <label for="totalHoleDepth" class="block text-sm font-medium text-gray-700 mb-1">Total Hole Depth (m)</label>
-                        <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    
-                    <div>
-                        <label for="waterDepth" class="block text-sm font-medium text-gray-700 mb-1">Water Depth (m)</label>
-                        <input type="number" id="waterDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    
-                    <div>
                         <label for="fromDepth" class="block text-sm font-medium text-gray-700 mb-1">From Depth (m)</label>
-                        <input type="number" id="fromDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <input type="number" id="fromDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
                     
                     <div>
                         <label for="toDepth" class="block text-sm font-medium text-gray-700 mb-1">To Depth (m)</label>
-                        <input type="number" id="toDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <input type="number" id="toDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
                     
                     <div>
@@ -249,9 +285,6 @@
                             <option value="Clay" data-color="#F0FF33">Clay</option>
                             <option value="Channel Iron Deposits" data-color="#FF33F0">Channel Iron Deposits</option>
                             <option value="Footwall Zone" data-color="#33FFF0">Footwall Zone</option>
-                            <option value="Example 1" data-color="#8A33FF">Example 1</option>
-                            <option value="Example 2" data-color="#FF8A33">Example 2</option>
-                            <option value="Example 3" data-color="#33FF8A">Example 3</option>
                             <option value="Boolgeeda Iron Formation" data-color="#FF338A">Boolgeeda Iron Formation</option>
                             <option value="Woongarra Rhyolite" data-color="#8AFF33">Woongarra Rhyolite</option>
                             <option value="Weeli Wolli Formation" data-color="#338AFF">Weeli Wolli Formation</option>
@@ -321,12 +354,12 @@
                     
                     <div>
                         <label for="constructionFromDepth" class="block text-sm font-medium text-gray-700 mb-1">From Depth (m)</label>
-                        <input type="number" id="constructionFromDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <input type="number" id="constructionFromDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
                     
                     <div>
                         <label for="constructionToDepth" class="block text-sm font-medium text-gray-700 mb-1">To Depth (m)</label>
-                        <input type="number" id="constructionToDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <input type="number" id="constructionToDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
                     </div>
                     
                     <div>
@@ -384,7 +417,7 @@
                         <label for="annulusColor" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
                         <div class="flex items-center">
                             <input type="color" id="annulusColor" value="#6B7280" class="w-10 h-10 mr-2">
-                            <div id="annulusColorPreview" class="color-preview" style="background-color: #6B7280;"></div>
+                            <div id="annulusColorPreview" class="colorPreview" style="background-color: #6B7280;"></div>
                         </div>
                     </div>
                     
@@ -443,6 +476,9 @@
                             
                             <!-- Geology on the right -->
                             <div id="geologyRight" class="geology-right"></div>
+                            
+                            <!-- Ground level indicator -->
+                            <div id="groundLevel" class="ground-level"></div>
                         </div>
                     </div>
                 </div>
@@ -500,11 +536,16 @@
             const waterLevel = document.getElementById('waterLevel');
             const geologyRight = document.getElementById('geologyRight');
             const depthScale = document.getElementById('depthScale');
+            const groundLevel = document.getElementById('groundLevel');
             const zoomInBtn = document.getElementById('zoomIn');
             const zoomOutBtn = document.getElementById('zoomOut');
             const exportBtn = document.getElementById('exportBtn');
             const editModeBtn = document.getElementById('editModeBtn');
             const totalDepthSpan = document.getElementById('totalDepth');
+            
+            // New elements for borehole details
+            const holeTypeSelect = document.getElementById('holeType');
+            const updateBoreholeDetailsBtn = document.getElementById('updateBoreholeDetails');
             
             // State
             let layers = [];
@@ -514,6 +555,12 @@
             let isEditMode = false;
             let totalHoleDepth = parseFloat(totalHoleDepthInput.value);
             let waterDepth = null;
+            let holeType = holeTypeSelect.value;
+            
+            // Initialize form fields
+            fromDepthInput.value = '0';
+            constructionFromDepthInput.value = '0';
+            annulusFromDepthInput.value = '0';
             
             // Material type selection changes color
             materialTypeSelect.addEventListener('change', function() {
@@ -562,16 +609,24 @@
                     totalHoleDepth = 30;
                     this.value = 30;
                 }
-                generateBorehole();
             });
             
             // Water depth change handler
             waterDepthInput.addEventListener('change', function() {
                 waterDepth = parseFloat(this.value);
-                if (isNaN(waterDepth) || waterDepth <= 0) {
+                if (isNaN(waterDepth)) {
                     waterDepth = null;
                     this.value = '';
                 }
+            });
+            
+            // Hole type change handler
+            holeTypeSelect.addEventListener('change', function() {
+                holeType = this.value;
+            });
+            
+            // Update borehole details
+            updateBoreholeDetailsBtn.addEventListener('click', function() {
                 generateBorehole();
             });
             
@@ -583,6 +638,11 @@
                 const toDepth = parseFloat(toDepthInput.value);
                 const materialType = materialTypeSelect.value;
                 const color = layerColorInput.value;
+                
+                if (isNaN(fromDepth) || isNaN(toDepth)) {
+                    alert('Please enter valid depth values');
+                    return;
+                }
                 
                 if (fromDepth >= toDepth) {
                     alert('"From Depth" must be less than "To Depth"');
@@ -611,7 +671,7 @@
                 updateLayerList();
                 generateBorehole();
                 
-                // Reset form but pre-populate From Depth with the last To Depth
+                // Update From Depth to the To Depth after successful submission
                 fromDepthInput.value = toDepth;
                 toDepthInput.value = '';
                 materialTypeSelect.selectedIndex = 0;
@@ -628,12 +688,17 @@
                 const constructionType = constructionTypeSelect.value;
                 const color = constructionColorInput.value;
                 
+                if (isNaN(fromDepth) || isNaN(toDepth)) {
+                    alert('Please enter valid depth values');
+                    return;
+                }
+                
                 if (fromDepth >= toDepth) {
                     alert('"From Depth" must be less than "To Depth"');
                     return;
                 }
                 
-                if (toDepth > totalHoleDepth) {
+                if (constructionType !== 'Headworks' && toDepth > totalHoleDepth) {
                     alert('"To Depth" cannot exceed the Total Hole Depth');
                     return;
                 }
@@ -655,8 +720,8 @@
                 updateConstructionList();
                 generateBorehole();
                 
-                // Reset form
-                constructionFromDepthInput.value = '';
+                // Update From Depth to the To Depth after successful submission
+                constructionFromDepthInput.value = toDepth;
                 constructionToDepthInput.value = '';
                 constructionTypeSelect.selectedIndex = 0;
                 constructionColorInput.value = '#8B4513';
@@ -671,6 +736,11 @@
                 const toDepth = parseFloat(annulusToDepthInput.value);
                 const annulusType = annulusTypeSelect.value;
                 const color = annulusColorInput.value;
+                
+                if (isNaN(fromDepth) || isNaN(toDepth)) {
+                    alert('Please enter valid depth values');
+                    return;
+                }
                 
                 if (fromDepth >= toDepth) {
                     alert('"From Depth" must be less than "To Depth"');
@@ -699,8 +769,8 @@
                 updateAnnulusList();
                 generateBorehole();
                 
-                // Reset form
-                annulusFromDepthInput.value = '';
+                // Update From Depth to the To Depth after successful submission
+                annulusFromDepthInput.value = toDepth;
                 annulusToDepthInput.value = '';
                 annulusTypeSelect.selectedIndex = 0;
                 annulusColorInput.value = '#6B7280';
@@ -713,7 +783,7 @@
                     layers = [];
                     updateLayerList();
                     generateBorehole();
-                    fromDepthInput.value = '';
+                    fromDepthInput.value = '0';
                     toDepthInput.value = '';
                 }
             });
@@ -724,7 +794,7 @@
                     constructionElements = [];
                     updateConstructionList();
                     generateBorehole();
-                    constructionFromDepthInput.value = '';
+                    constructionFromDepthInput.value = '0';
                     constructionToDepthInput.value = '';
                 }
             });
@@ -735,7 +805,7 @@
                     annulusElements = [];
                     updateAnnulusList();
                     generateBorehole();
-                    annulusFromDepthInput.value = '';
+                    annulusFromDepthInput.value = '0';
                     annulusToDepthInput.value = '';
                 }
             });
@@ -1084,7 +1154,7 @@
                         annulusElement.innerHTML = `
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
-                                    <div class="color-p preview mr-2" style="background-color: ${annulus.color};"></div>
+                                    <div class="color-preview mr-2" style="background-color: ${annulus.color};"></div>
                                     <div>
                                         <div class="font-medium">${annulus.annulusType}</div>
                                         <div class="text-xs text-gray-500">${annulus.fromDepth}m - ${annulus.toDepth}m</div>
@@ -1141,13 +1211,21 @@
                 waterLevel.innerHTML = '';
                 geologyRight.innerHTML = '';
                 depthScale.innerHTML = '';
+                groundLevel.innerHTML = '';
                 
                 // Update total depth display
                 totalDepthSpan.textContent = `Total depth: ${totalHoleDepth} m`;
                 
-                // Generate segments (0.5m each)
-                const segmentCount = totalHoleDepth * 2;
-                const containerHeight = segmentCount * segmentHeight;
+                // Find the minimum depth (for headworks that might be above ground)
+                let minDepth = 0;
+                constructionElements.forEach(construction => {
+                    if (construction.fromDepth < minDepth) minDepth = construction.fromDepth;
+                    if (construction.toDepth < minDepth) minDepth = construction.toDepth;
+                });
+                
+                // Calculate total height needed (from minDepth to totalHoleDepth)
+                const depthRange = totalHoleDepth - minDepth;
+                const containerHeight = depthRange * 2 * segmentHeight;
                 
                 // Set container heights
                 boreholeContainer.style.height = `${containerHeight}px`;
@@ -1158,9 +1236,23 @@
                 geologyRight.style.height = `${containerHeight}px`;
                 depthScale.style.height = `${containerHeight}px`;
                 
-                // Create major depth markers (every 10m)
-                for (let i = 0; i <= totalHoleDepth; i += 10) {
-                    const markerPosition = i * 2 * segmentHeight;
+                // Create ground level indicator (at 0m)
+                const groundLevelPosition = (0 - minDepth) * 2 * segmentHeight;
+                const groundLevelLine = document.createElement('div');
+                groundLevelLine.className = 'ground-level';
+                groundLevelLine.style.top = `${groundLevelPosition}px`;
+                
+                const groundLevelLabel = document.createElement('div');
+                groundLevelLabel.className = 'ground-level-label';
+                groundLevelLabel.style.top = `${groundLevelPosition}px`;
+                groundLevelLabel.textContent = 'Ground Level (0m)';
+                
+                groundLevel.appendChild(groundLevelLine);
+                groundLevel.appendChild(groundLevelLabel);
+                
+                // Create depth markers (every 10m)
+                for (let i = Math.ceil(minDepth / 10) * 10; i <= totalHoleDepth; i += 10) {
+                    const markerPosition = (i - minDepth) * 2 * segmentHeight;
                     const marker = document.createElement('div');
                     marker.className = 'depth-marker';
                     marker.style.top = `${markerPosition}px`;
@@ -1169,8 +1261,8 @@
                 }
                 
                 // Create geology segments (left side)
-                for (let i = 0; i < segmentCount; i++) {
-                    const currentDepth = i * 0.5;
+                for (let i = 0; i < depthRange * 2; i++) {
+                    const currentDepth = minDepth + (i * 0.5);
                     const segment = document.createElement('div');
                     segment.className = 'layer-segment';
                     segment.style.height = `${segmentHeight}px`;
@@ -1190,8 +1282,8 @@
                 }
                 
                 // Create geology segments (right side)
-                for (let i = 0; i < segmentCount; i++) {
-                    const currentDepth = i * 0.5;
+                for (let i = 0; i < depthRange * 2; i++) {
+                    const currentDepth = minDepth + (i * 0.5);
                     const segment = document.createElement('div');
                     segment.className = 'layer-segment';
                     segment.style.height = `${segmentHeight}px`;
@@ -1229,16 +1321,15 @@
                 
                 // Add annulus construction elements (wider than bore construction)
                 annulusElements.forEach(annulus => {
-                    const fromSegment = Math.floor(annulus.fromDepth * 2);
-                    const toSegment = Math.floor(annulus.toDepth * 2);
-                    const segmentCount = toSegment - fromSegment;
+                    const fromPosition = (annulus.fromDepth - minDepth) * 2 * segmentHeight;
+                    const height = (annulus.toDepth - annulus.fromDepth) * 2 * segmentHeight;
                     
-                    if (segmentCount <= 0) return;
+                    if (height <= 0) return;
                     
                     const annulusContainer = document.createElement('div');
                     annulusContainer.className = `absolute ${getAnnulusPatternClass(annulus.annulusType)}`;
-                    annulusContainer.style.top = `${fromSegment * segmentHeight}px`;
-                    annulusContainer.style.height = `${segmentCount * segmentHeight}px`;
+                    annulusContainer.style.top = `${fromPosition}px`;
+                    annulusContainer.style.height = `${height}px`;
                     annulusContainer.style.width = '100px';
                     annulusContainer.style.left = '50%';
                     annulusContainer.style.transform = 'translateX(-50%)';
@@ -1258,15 +1349,14 @@
                 
                 // Add water level if specified
                 if (waterDepth !== null && waterDepth < totalHoleDepth) {
-                    const fromSegment = Math.floor(waterDepth * 2);
-                    const toSegment = segmentCount;
-                    const segmentCountWater = toSegment - fromSegment;
+                    const fromPosition = (waterDepth - minDepth) * 2 * segmentHeight;
+                    const height = (totalHoleDepth - waterDepth) * 2 * segmentHeight;
                     
-                    if (segmentCountWater > 0) {
+                    if (height > 0) {
                         const waterContainer = document.createElement('div');
                         waterContainer.className = 'water-level';
-                        waterContainer.style.top = `${fromSegment * segmentHeight}px`;
-                        waterContainer.style.height = `${segmentCountWater * segmentHeight}px`;
+                        waterContainer.style.top = `${fromPosition}px`;
+                        waterContainer.style.height = `${height}px`;
                         waterContainer.style.backgroundColor = 'rgba(0, 119, 255, 0.3)';
                         waterContainer.style.borderLeft = '1px solid rgba(0, 119, 255, 0.7)';
                         waterContainer.style.borderRight = '1px solid rgba(0, 119, 255, 0.7)';
@@ -1285,16 +1375,15 @@
                 
                 // Add construction elements (center)
                 constructionElements.forEach(construction => {
-                    const fromSegment = Math.floor(construction.fromDepth * 2);
-                    const toSegment = Math.floor(construction.toDepth * 2);
-                    const segmentCount = toSegment - fromSegment;
+                    const fromPosition = (construction.fromDepth - minDepth) * 2 * segmentHeight;
+                    const height = (construction.toDepth - construction.fromDepth) * 2 * segmentHeight;
                     
-                    if (segmentCount <= 0) return;
+                    if (height <= 0) return;
                     
                     const constructionContainer = document.createElement('div');
                     constructionContainer.className = `absolute ${getConstructionPatternClass(construction.constructionType)}`;
-                    constructionContainer.style.top = `${fromSegment * segmentHeight}px`;
-                    constructionContainer.style.height = `${segmentCount * segmentHeight}px`;
+                    constructionContainer.style.top = `${fromPosition}px`;
+                    constructionContainer.style.height = `${height}px`;
                     constructionContainer.style.width = '60px';
                     constructionContainer.style.left = '50%';
                     constructionContainer.style.transform = 'translateX(-50%)';
