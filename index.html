@@ -6,491 +6,558 @@
     <title>Borehole Schematic Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .input-field:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+        }
+        
+        .borehole-container, .depth-scale, .geology-left, .geology-right, 
+        .bore-construction, .annulus-construction, .water-level {
+            position: absolute;
+        }
+        
         .borehole-container {
-            position: relative;
-            margin-left: 60px;
-            height: 100%;
-            width: calc(100% - 60px);
+            margin-left: 40px;
+            width: calc(100% - 40px);
         }
         
         .depth-scale {
-            position: absolute;
-            left: -60px;
-            width: 60px;
-            height: 100%;
+            left: -40px;
+            width: 40px;
             border-right: 1px solid #e5e7eb;
             background-color: #f9fafb;
         }
         
         .depth-marker {
             position: absolute;
-            right: 8px;
-            font-size: 0.75rem;
+            right: 4px;
+            font-size: 0.65rem;
             color: #555;
-        }
-        
-        .geology-left, .geology-right {
-            position: absolute;
-            height: 100%;
-            background-color: #f9fafb;
         }
         
         .geology-left {
             left: 0;
-            width: calc(50% - 80px);
+            width: calc(50% - 60px);
+            background-color: #f9fafb;
         }
         
         .geology-right {
             right: 0;
-            width: calc(50% - 80px);
+            width: calc(50% - 60px);
+            background-color: #f9fafb;
         }
         
         .bore-construction {
-            position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 100%;
+            width: 40px;
             z-index: 2;
         }
         
         .annulus-construction {
-            position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            width: 100px;
-            height: 100%;
+            width: 80px;
             z-index: 1;
         }
         
         .water-level {
-            position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
+            width: 40px;
             z-index: 4;
         }
         
         .layer-segment {
             position: relative;
             width: 100%;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         
-        .layer-segment:hover {
-            opacity: 0.8;
+        .segment-label, .water-level-label, .right-label, .annulus-label {
+            position: absolute;
+            font-size: 0.6rem;
+            white-space: nowrap;
         }
         
         .segment-label {
-            position: absolute;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.6rem;
             color: white;
             text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-            white-space: nowrap;
-            pointer-events: none;
+            font-weight: 500;
         }
         
         .water-level-label {
-            position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.7rem;
             color: #0077FF;
             text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
-            white-space: nowrap;
             background-color: rgba(255,255,255,0.7);
-            padding: 0 4px;
-            border-radius: 3px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .right-label {
-            position: absolute;
-            right: -120px;
-            font-size: 0.75rem;
+            right: -100px;
             color: #555;
-            white-space: nowrap;
-            width: 110px;
+            width: 90px;
+            background: white;
+            padding: 4px 6px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+        
+        .annulus-label {
+            left: -90px;
+            color: #555;
+            width: 80px;
+            text-align: right;
+            background-color: white;
+            padding: 4px 6px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-weight: 500;
         }
         
         .color-preview {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border-radius: 4px;
             display: inline-block;
-            margin-right: 8px;
+            margin-right: 6px;
             vertical-align: middle;
-            border: 1px solid #ddd;
-        }
-        
-        /* Construction patterns */
-        .headworks-pattern {
-            background-color: #8B4513;
-            background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        .surface-casing-pattern {
-            background-color: #A0522D;
-            background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        .blank-casing-pattern {
-            background-color: #CD853F;
-            background-image: linear-gradient(0deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        .slotted-casing-1-pattern {
-            background-color: #D2691E;
-            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        .screens-pattern {
-            background-color: #B8860B;
-            background-image: 
-                linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent),
-                linear-gradient(-45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        .slotted-casing-2-pattern {
-            background-color: #DAA520;
-            background-image: linear-gradient(0deg, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 6px, transparent 6px);
-            background-size: 10px 10px;
-        }
-        
-        .sump-pattern {
-            background-color: #F4A460;
-            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 6px, transparent 6px);
-            background-size: 10px 10px;
-        }
-        
-        .endcap-pattern {
-            background-color: #BC8F8F;
-            background-image: 
-                linear-gradient(0deg, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 6px, transparent 6px),
-                linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 6px, transparent 6px);
-            background-size: 10px 10px;
-        }
-        
-        /* Annulus patterns */
-        .grout-pattern {
-            background-color: #6B7280;
-            background-image: 
-                linear-gradient(45deg, rgba(255,255,255,0.3) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.3) 75%, transparent 75%, transparent),
-                linear-gradient(-45deg, rgba(255,255,255,0.3) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.3) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
-        }
-        
-        .gravel-pattern {
-            background-color: #92400E;
-            background-image: 
-                radial-gradient(circle, rgba(255,255,255,0.3) 20%, transparent 20%),
-                radial-gradient(circle, rgba(255,255,255,0.3) 20%, transparent 20%);
-            background-size: 10px 10px;
-            background-position: 0 0, 5px 5px;
-        }
-        
-        .bentonite-pattern {
-            background-color: #3F6212;
-            background-image: 
-                linear-gradient(0deg, rgba(255,255,255,0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
-            background-size: 5px 5px;
+            border: 1px solid #e2e8f0;
         }
         
         .ground-level {
             position: absolute;
             left: 0;
             right: 0;
-            border-top: 2px dashed #555;
+            border-top: 2px dashed #6366f1;
             z-index: 10;
         }
         
         .ground-level-label {
             position: absolute;
-            left: -60px;
-            font-size: 0.7rem;
-            color: #555;
-            background-color: rgba(255,255,255,0.7);
-            padding: 0 4px;
-            border-radius: 3px;
+            left: -40px;
+            font-size: 0.6rem;
+            color: #6366f1;
+            background-color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .export-spinner {
+            display: none;
+            margin-left: 6px;
+        }
+
+        .exporting .export-spinner {
+            display: inline-block;
+        }
+
+        .exporting .export-text {
+            display: none;
+        }
+        
+        /* Compact form styles */
+        .compact-form .form-group {
+            margin-bottom: 0.5rem;
+        }
+        
+        .compact-form label {
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        
+        .compact-form input, .compact-form select {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .compact-form .btn {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+        }
+        
+        /* Compact list styles */
+        .compact-list {
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+        
+        .compact-list-item {
+            padding: 0.4rem 0.75rem;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        
+        .compact-list-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Tab navigation */
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+        }
+        
+        .tab-btn.active {
+            border-bottom-color: #6366f1;
+            color: #6366f1;
+            font-weight: 500;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .borehole-container {
+                margin-left: 30px;
+                width: calc(100% - 30px);
+            }
+            
+            .depth-scale {
+                left: -30px;
+                width: 30px;
+            }
+            
+            .geology-left, .geology-right {
+                width: calc(50% - 45px);
+            }
+            
+            .bore-construction {
+                width: 30px;
+            }
+            
+            .annulus-construction {
+                width: 60px;
+            }
+            
+            .water-level {
+                width: 30px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Borehole Schematic Generator</h1>
-            <p class="text-gray-600">Visualize geological layers and construction details in a borehole</p>
-        </header>
-
-        <!-- Borehole Details Container -->
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-700">Borehole Details</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<body class="min-h-screen">
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-4 shadow-sm">
+        <div class="container mx-auto">
+            <div class="flex items-center justify-between">
                 <div>
-                    <label for="holeType" class="block text-sm font-medium text-gray-700 mb-1">Hole Type</label>
-                    <select id="holeType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="Hydrogeology">Hydrogeology</option>
-                        <option value="Diamond Drilling">Diamond Drilling</option>
-                        <option value="RC Drilling">RC Drilling</option>
-                    </select>
+                    <h1 class="text-xl font-bold text-white">Borehole Schematic Generator</h1>
+                    <p class="text-indigo-100 text-xs">Create and export borehole diagrams</p>
                 </div>
-                <div>
-                    <label for="totalHoleDepth" class="block text-sm font-medium text-gray-700 mb-1">Total Depth (m)</label>
-                    <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                </div>
-                <div>
-                    <label for="waterDepth" class="block text-sm font-medium text-gray-700 mb-1">Water Depth (m)</label>
-                    <input type="number" id="waterDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div class="flex items-end">
-                    <button id="updateBoreholeDetails" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <i class="fas fa-sync-alt mr-2"></i> Update
-                    </button>
+                <div class="flex items-center space-x-2">
+                    <div class="bg-white/20 rounded-full p-1">
+                        <i class="fas fa-water text-white text-sm"></i>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <!-- Layer Information Form -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Layer Information</h2>
-                
-                <form id="layerForm" class="space-y-4">
-                    <div>
-                        <label for="fromDepth" class="block text-sm font-medium text-gray-700 mb-1">From Depth (m)</label>
-                        <input type="number" id="fromDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+    <div class="container mx-auto px-4 py-4">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <!-- Left Panel - Forms -->
+            <div class="lg:col-span-2 space-y-4">
+                <!-- Borehole Details -->
+                <div class="card p-4">
+                    <div class="flex items-center mb-3">
+                        <div class="bg-indigo-100 p-1 rounded-lg mr-3">
+                            <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
+                        </div>
+                        <h2 class="text-base font-semibold text-gray-800">Borehole Details</h2>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="form-group">
+                            <label for="boreId" class="text-xs text-gray-600">Bore ID</label>
+                            <input type="text" id="boreId" class="input-field w-full px-3 py-1 text-sm rounded-md shadow-sm focus:outline-none" placeholder="BH-001">
+                        </div>
+                        <div class="form-group">
+                            <label for="totalHoleDepth" class="text-xs text-gray-600">Total Depth (m)</label>
+                            <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="input-field w-full px-3 py-1 text-sm rounded-md shadow-sm focus:outline-none" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="waterDepth" class="text-xs text-gray-600">Water Depth (m)</label>
+                            <input type="number" id="waterDepth" step="0.5" min="0" class="input-field w-full px-3 py-1 text-sm rounded-md shadow-sm focus:outline-none">
+                        </div>
+                        <div class="form-group flex items-end">
+                            <button id="generateBtn" class="btn-primary w-full py-1 px-3 rounded-md text-sm">
+                                <i class="fas fa-sync-alt mr-1"></i> Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="card">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="layers">
+                            <i class="fas fa-layer-group mr-1"></i> Layers
+                        </button>
+                        <button class="tab-btn" data-tab="construction">
+                            <i class="fas fa-hammer mr-1"></i> Construction
+                        </button>
+                        <button class="tab-btn" data-tab="annulus">
+                            <i class="fas fa-fill-drip mr-1"></i> Annulus
+                        </button>
                     </div>
                     
-                    <div>
-                        <label for="toDepth" class="block text-sm font-medium text-gray-700 mb-1">To Depth (m)</label>
-                        <input type="number" id="toDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    
-                    <div>
-                        <label for="materialType" class="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
-                        <select id="materialType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                            <option value="" disabled selected>Select a material type</option>
-                            <option value="Detritals" data-color="#FF5733">Detritals</option>
-                            <option value="Pisolites" data-color="#33FF57">Pisolites</option>
-                            <option value="Calcrete" data-color="#3357FF">Calcrete</option>
-                            <option value="Clay" data-color="#F0FF33">Clay</option>
-                            <option value="Channel Iron Deposits" data-color="#FF33F0">Channel Iron Deposits</option>
-                            <option value="Footwall Zone" data-color="#33FFF0">Footwall Zone</option>
-                            <option value="Boolgeeda Iron Formation" data-color="#FF338A">Boolgeeda Iron Formation</option>
-                            <option value="Woongarra Rhyolite" data-color="#8AFF33">Woongarra Rhyolite</option>
-                            <option value="Weeli Wolli Formation" data-color="#338AFF">Weeli Wolli Formation</option>
-                            <option value="Brockman Iron Formation" data-color="#FF5733">Brockman Iron Formation</option>
-                            <option value="Mt McRae Shale" data-color="#57FF33">Mt McRae Shale</option>
-                            <option value="Mt Sylvia Formation" data-color="#3357FF">Mt Sylvia Formation</option>
-                            <option value="Wittenoom Formation" data-color="#F0FF33">Wittenoom Formation</option>
-                            <option value="Marra Mamba Formation" data-color="#FF33F0">Marra Mamba Formation</option>
-                            <option value="Yandicoogina Shale Member" data-color="#33FFF0">Yandicoogina Shale Member</option>
-                            <option value="Joffe Member" data-color="#8A33FF">Joffe Member</option>
-                            <option value="Mt Whaleback Shale Member" data-color="#FF8A33">Mt Whaleback Shale Member</option>
-                            <option value="Dales Gorge Member" data-color="#33FF8A">Dales Gorge Member</option>
-                            <option value="Bee Gorge Member" data-color="#FF338A">Bee Gorge Member</option>
-                            <option value="Paraburdoo Member" data-color="#8AFF33">Paraburdoo Member</option>
-                            <option value="West Angela Member" data-color="#338AFF">West Angela Member</option>
-                            <option value="Mount Newman Formation" data-color="#FF5733">Mount Newman Formation</option>
-                            <option value="MacLeod Member" data-color="#57FF33">MacLeod Member</option>
-                            <option value="Nammuldi Member" data-color="#3357FF">Nammuldi Member</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="layerColor" class="block text-sm font-medium text-gray-700 mb-1">Layer Color</label>
-                        <div class="flex items-center">
-                            <input type="color" id="layerColor" value="#33FF57" class="w-10 h-10 mr-2">
-                            <div id="colorPreview" class="color-preview" style="background-color: #33FF57;"></div>
+                    <!-- Layers Tab -->
+                    <div class="tab-content p-4" id="layers-tab">
+                        <form id="layerForm" class="compact-form space-y-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="form-group">
+                                    <label for="fromDepth">From (m)</label>
+                                    <input type="number" id="fromDepth" step="0.5" class="input-field w-full" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="toDepth">To (m)</label>
+                                    <input type="number" id="toDepth" step="0.5" class="input-field w-full" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="materialType">Material</label>
+                                    <select id="materialType" class="input-field w-full" required>
+                                        <option value="" disabled selected>Select</option>
+                                        <option value="Detritals" data-color="#FF5733">Detritals</option>
+                                        <option value="Pisolites" data-color="#33FF57">Pisolites</option>
+                                        <option value="Calcrete" data-color="#3357FF">Calcrete</option>
+                                        <option value="Clay" data-color="#F0FF33">Clay</option>
+                                        <option value="Sandstone" data-color="#FFC300">Sandstone</option>
+                                        <option value="Limestone" data-color="#50C878">Limestone</option>
+                                        <option value="Granite" data-color="#C0C0C0">Granite</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 pt-1">
+                                <button type="submit" class="btn-primary flex-1 py-1 px-2 rounded-md text-xs">
+                                    <i class="fas fa-plus mr-1"></i> Add Layer
+                                </button>
+                                <button type="button" id="clearAllLayers" class="bg-gray-100 text-gray-700 py-1 px-2 rounded-md text-xs border border-gray-200 hover:bg-gray-50">
+                                    <i class="fas fa-trash-alt mr-1"></i> Clear
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-3">
+                            <h3 class="text-xs font-medium text-gray-700 mb-1 flex items-center">
+                                <i class="fas fa-list-ul mr-1 text-gray-400"></i> Current Layers
+                            </h3>
+                            <div id="layerList" class="compact-list border rounded-md">
+                                <div class="empty-state p-2 text-center text-gray-400 text-xs">
+                                    <i class="fas fa-layer-group text-lg mb-1 text-gray-300"></i>
+                                    <p>No layers added</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="flex space-x-3 pt-2">
-                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <i class="fas fa-layer-group mr-2"></i> Add Layer
-                        </button>
-                        <button type="button" id="clearAllLayers" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                            <i class="fas fa-trash-alt mr-2"></i> Clear All
-                        </button>
+                    <!-- Construction Tab -->
+                    <div class="tab-content p-4 hidden" id="construction-tab">
+                        <form id="constructionForm" class="compact-form space-y-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="form-group">
+                                    <label for="constructionFromDepth">From (m)</label>
+                                    <input type="number" id="constructionFromDepth" step="0.5" class="input-field w-full" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="constructionToDepth">To (m)</label>
+                                    <input type="number" id="constructionToDepth" step="0.5" class="input-field w-full" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="constructionType">Type</label>
+                                    <select id="constructionType" class="input-field w-full" required>
+                                        <option value="" disabled selected>Select</option>
+                                        <option value="Headworks" data-color="#8B4513">Headworks</option>
+                                        <option value="Surface Casing" data-color="#A0522D">Surface Casing</option>
+                                        <option value="Blank Casing" data-color="#CD853F">Blank Casing</option>
+                                        <option value="Slotted Casing" data-color="#D2691E">Slotted Casing</option>
+                                        <option value="Screen" data-color="#B87333">Screen</option>
+                                        <option value="Riser Pipe" data-color="#6E260E">Riser Pipe</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 pt-1">
+                                <button type="submit" class="btn-primary flex-1 py-1 px-2 rounded-md text-xs">
+                                    <i class="fas fa-plus mr-1"></i> Add Construction
+                                </button>
+                                <button type="button" id="clearAllConstruction" class="bg-gray-100 text-gray-700 py-1 px-2 rounded-md text-xs border border-gray-200 hover:bg-gray-50">
+                                    <i class="fas fa-trash-alt mr-1"></i> Clear
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-3">
+                            <h3 class="text-xs font-medium text-gray-700 mb-1 flex items-center">
+                                <i class="fas fa-list-ul mr-1 text-gray-400"></i> Current Construction
+                            </h3>
+                            <div id="constructionList" class="compact-list border rounded-md">
+                                <div class="empty-state p-2 text-center text-gray-400 text-xs">
+                                    <i class="fas fa-hammer text-lg mb-1 text-gray-300"></i>
+                                    <p>No construction added</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </form>
-                
-                <div class="mt-6">
-                    <h3 class="text-lg font-medium text-gray-700 mb-2">Current Layers</h3>
-                    <div id="layerList" class="border rounded-md divide-y divide-gray-200 max-h-60 overflow-y-auto">
-                        <div class="p-3 text-center text-gray-500">No layers added yet</div>
+                    
+                    <!-- Annulus Tab -->
+                    <div class="tab-content p-4 hidden" id="annulus-tab">
+                        <form id="annulusForm" class="compact-form space-y-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="form-group">
+                                    <label for="annulusFromDepth">From (m)</label>
+                                    <input type="number" id="annulusFromDepth" step="0.5" min="0" class="input-field w-full" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="annulusToDepth">To (m)</label>
+                                    <input type="number" id="annulusToDepth" step="0.5" min="0" class="input-field w-full" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="annulusType">Type</label>
+                                    <select id="annulusType" class="input-field w-full" required>
+                                        <option value="" disabled selected>Select</option>
+                                        <option value="Grout" data-color="#6B7280">Grout</option>
+                                        <option value="Gravel" data-color="#92400E">Gravel</option>
+                                        <option value="Bentonite" data-color="#3F6212">Bentonite</option>
+                                        <option value="Cement" data-color="#9CA3AF">Cement</option>
+                                        <option value="Sand" data-color="#D97706">Sand</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 pt-1">
+                                <button type="submit" class="btn-primary flex-1 py-1 px-2 rounded-md text-xs">
+                                    <i class="fas fa-plus mr-1"></i> Add Annulus
+                                </button>
+                                <button type="button" id="clearAllAnnulus" class="bg-gray-100 text-gray-700 py-1 px-2 rounded-md text-xs border border-gray-200 hover:bg-gray-50">
+                                    <i class="fas fa-trash-alt mr-1"></i> Clear
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-3">
+                            <h3 class="text-xs font-medium text-gray-700 mb-1 flex items-center">
+                                <i class="fas fa-list-ul mr-1 text-gray-400"></i> Current Annulus
+                            </h3>
+                            <div id="annulusList" class="compact-list border rounded-md">
+                                <div class="empty-state p-2 text-center text-gray-400 text-xs">
+                                    <i class="fas fa-fill-drip text-lg mb-1 text-gray-300"></i>
+                                    <p>No annulus added</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Bore Construction Form -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Bore Construction</h2>
-                
-                <form id="constructionForm" class="space-y-4">
-                    <div>
-                        <label for="constructionType" class="block text-sm font-medium text-gray-700 mb-1">Construction Type</label>
-                        <select id="constructionType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                            <option value="" disabled selected>Select construction type</option>
-                            <option value="Headworks" data-color="#8B4513">Headworks</option>
-                            <option value="Surface Casing" data-color="#A0522D">Surface Casing</option>
-                            <option value="Blank Casing" data-color="#CD853F">Blank Casing</option>
-                            <option value="Slotted Casing 1" data-color="#D2691E">Slotted Casing 1</option>
-                            <option value="Screens" data-color="#B8860B">Screens</option>
-                            <option value="Slotted Casing 2" data-color="#DAA520">Slotted Casing 2</option>
-                            <option value="Sump" data-color="#F4A460">Sump</option>
-                            <option value="Endcap" data-color="#BC8F8F">Endcap</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="constructionFromDepth" class="block text-sm font-medium text-gray-700 mb-1">From Depth (m)</label>
-                        <input type="number" id="constructionFromDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    
-                    <div>
-                        <label for="constructionToDepth" class="block text-sm font-medium text-gray-700 mb-1">To Depth (m)</label>
-                        <input type="number" id="constructionToDepth" step="0.5" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    
-                    <div>
-                        <label for="constructionColor" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+            <!-- Right Panel - Borehole Visualization -->
+            <div class="lg:col-span-3">
+                <div class="card p-4 h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
                         <div class="flex items-center">
-                            <input type="color" id="constructionColor" value="#8B4513" class="w-10 h-10 mr-2">
-                            <div id="constructionColorPreview" class="color-preview" style="background-color: #8B4513;"></div>
+                            <div class="bg-indigo-100 p-1 rounded-lg mr-3">
+                                <i class="fas fa-chart-bar text-indigo-600 text-sm"></i>
+                            </div>
+                            <h2 class="text-base font-semibold text-gray-800">Borehole Schematic</h2>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button id="zoomIn" class="bg-gray-100 p-1 rounded-md text-gray-700 hover:bg-gray-200">
+                                <i class="fas fa-search-plus text-xs"></i>
+                            </button>
+                            <button id="zoomOut" class="bg-gray-100 p-1 rounded-md text-gray-700 hover:bg-gray-200">
+                                <i class="fas fa-search-minus text-xs"></i>
+                            </button>
+                            <button id="exportBtn" class="btn-primary py-1 px-3 rounded-md text-xs">
+                                <span class="export-text"><i class="fas fa-download mr-1"></i> Export</span>
+                                <span class="export-spinner"><i class="fas fa-spinner fa-spin"></i></span>
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="flex space-x-3 pt-2">
-                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <i class="fas fa-hammer mr-2"></i> Add Construction
-                        </button>
-                        <button type="button" id="clearAllConstruction" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                            <i class="fas fa-trash-alt mr-2"></i> Clear All
-                        </button>
-                    </div>
-                </form>
-                
-                <div class="mt-6">
-                    <h3 class="text-lg font-medium text-gray-700 mb-2">Current Construction</h3>
-                    <div id="constructionList" class="border rounded-md divide-y divide-gray-200 max-h-60 overflow-y-auto">
-                        <div class="p-3 text-center text-gray-500">No construction added yet</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Annulus Construction Form -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Annulus Construction</h2>
-                
-                <form id="annulusForm" class="space-y-4">
-                    <div>
-                        <label for="annulusType" class="block text-sm font-medium text-gray-700 mb-1">Annulus Type</label>
-                        <select id="annulusType" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                            <option value="" disabled selected>Select annulus type</option>
-                            <option value="Grout" data-color="#6B7280">Grout</option>
-                            <option value="Gravel" data-color="#92400E">Gravel</option>
-                            <option value="Bentonite" data-color="#3F6212">Bentonite</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="annulusFromDepth" class="block text-sm font-medium text-gray-700 mb-1">From Depth (m)</label>
-                        <input type="number" id="annulusFromDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    
-                    <div>
-                        <label for="annulusToDepth" class="block text-sm font-medium text-gray-700 mb-1">To Depth (m)</label>
-                        <input type="number" id="annulusToDepth" step="0.5" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    
-                    <div>
-                        <label for="annulusColor" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                        <div class="flex items-center">
-                            <input type="color" id="annulusColor" value="#6B7280" class="w-10 h-10 mr-2">
-                            <div id="annulusColorPreview" class="colorPreview" style="background-color: #6B7280;"></div>
+                    <div class="border rounded-lg p-3 bg-gray-50 shadow-inner flex-grow overflow-auto">
+                        <div id="boreholeWrapper" class="relative" style="min-height: 100%;">
+                            <div id="boreholeContainer" class="borehole-container">
+                                <!-- Depth scale on the left -->
+                                <div id="depthScale" class="depth-scale"></div>
+                                
+                                <!-- Geology on the left -->
+                                <div id="geologyLeft" class="geology-left"></div>
+                                
+                                <!-- Annulus construction (wider than bore construction) -->
+                                <div id="annulusConstruction" class="annulus-construction"></div>
+                                
+                                <!-- Bore construction in the center -->
+                                <div id="boreConstruction" class="bore-construction"></div>
+                                
+                                <!-- Water level -->
+                                <div id="waterLevel" class="water-level"></div>
+                                
+                                <!-- Geology on the right -->
+                                <div id="geologyRight" class="geology-right"></div>
+                                
+                                <!-- Ground level indicator -->
+                                <div id="groundLevel" class="ground-level"></div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="flex space-x-3 pt-2">
-                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <i class="fas fa-fill-drip mr-2"></i> Add Annulus
-                        </button>
-                        <button type="button" id="clearAllAnnulus" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                            <i class="fas fa-trash-alt mr-2"></i> Clear All
-                        </button>
-                    </div>
-                </form>
-                
-                <div class="mt-6">
-                    <h3 class="text-lg font-medium text-gray-700 mb-2">Current Annulus</h3>
-                    <div id="annulusList" class="border rounded-md divide-y divide-gray-200 max-h-60 overflow-y-auto">
-                        <div class="p-3 text-center text-gray-500">No annulus added yet</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Borehole Visualization -->
-            <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-700">Borehole Schematic</h2>
-                    <div class="flex space-x-2">
-                        <button id="zoomIn" class="bg-gray-100 p-2 rounded-md hover:bg-gray-200">
-                            <i class="fas fa-search-plus"></i>
-                        </button>
-                        <button id="zoomOut" class="bg-gray-100 p-2 rounded-md hover:bg-gray-200">
-                            <i class="fas fa-search-minus"></i>
-                        </button>
-                        <button id="exportBtn" class="bg-indigo-100 text-indigo-700 p-2 rounded-md hover:bg-indigo-200">
-                            <i class="fas fa-download mr-1"></i> Export
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="border rounded-md p-4 bg-gray-50">
-                    <div class="relative" style="height: 600px; overflow-y: auto;">
-                        <div id="boreholeContainer" class="borehole-container">
-                            <!-- Depth scale on the left -->
-                            <div id="depthScale" class="depth-scale"></div>
-                            
-                            <!-- Geology on the left -->
-                            <div id="geologyLeft" class="geology-left"></div>
-                            
-                            <!-- Annulus construction (wider than bore construction) -->
-                            <div id="annulusConstruction" class="annulus-construction"></div>
-                            
-                            <!-- Bore construction in the center -->
-                            <div id="boreConstruction" class="bore-construction"></div>
-                            
-                            <!-- Water level -->
-                            <div id="waterLevel" class="water-level"></div>
-                            
-                            <!-- Geology on the right -->
-                            <div id="geologyRight" class="geology-right"></div>
-                            
-                            <!-- Ground level indicator -->
-                            <div id="groundLevel" class="ground-level"></div>
+                    <div class="mt-2 flex justify-between items-center text-xs text-gray-500">
+                        <div>
+                            <span id="totalDepth">Total depth: 30 m</span>
+                            <span id="waterDepthDisplay" class="ml-3 hidden"><i class="fas fa-tint text-blue-500"></i> Water at: <span class="font-medium">0</span> m</span>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4 flex justify-between items-center">
-                    <div class="text-sm text-gray-500">
-                        <span id="totalDepth">Total depth: 30 m</span>
-                    </div>
-                    <div class="text-sm">
-                        <button id="editModeBtn" class="text-indigo-600 hover:text-indigo-800">
-                            <i class="fas fa-edit mr-1"></i> Edit Mode
-                        </button>
+                        <div>
+                            <button id="editModeBtn" class="text-indigo-600 hover:text-indigo-800">
+                                <i class="fas fa-edit mr-1"></i> Edit Mode
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -506,8 +573,6 @@
             const fromDepthInput = document.getElementById('fromDepth');
             const toDepthInput = document.getElementById('toDepth');
             const materialTypeSelect = document.getElementById('materialType');
-            const layerColorInput = document.getElementById('layerColor');
-            const colorPreview = document.getElementById('colorPreview');
             const clearAllLayersBtn = document.getElementById('clearAllLayers');
             const layerList = document.getElementById('layerList');
             
@@ -515,8 +580,6 @@
             const constructionTypeSelect = document.getElementById('constructionType');
             const constructionFromDepthInput = document.getElementById('constructionFromDepth');
             const constructionToDepthInput = document.getElementById('constructionToDepth');
-            const constructionColorInput = document.getElementById('constructionColor');
-            const constructionColorPreview = document.getElementById('constructionColorPreview');
             const clearAllConstructionBtn = document.getElementById('clearAllConstruction');
             const constructionList = document.getElementById('constructionList');
             
@@ -524,12 +587,11 @@
             const annulusTypeSelect = document.getElementById('annulusType');
             const annulusFromDepthInput = document.getElementById('annulusFromDepth');
             const annulusToDepthInput = document.getElementById('annulusToDepth');
-            const annulusColorInput = document.getElementById('annulusColor');
-            const annulusColorPreview = document.getElementById('annulusColorPreview');
             const clearAllAnnulusBtn = document.getElementById('clearAllAnnulus');
             const annulusList = document.getElementById('annulusList');
             
             const boreholeContainer = document.getElementById('boreholeContainer');
+            const boreholeWrapper = document.getElementById('boreholeWrapper');
             const geologyLeft = document.getElementById('geologyLeft');
             const annulusConstruction = document.getElementById('annulusConstruction');
             const boreConstruction = document.getElementById('boreConstruction');
@@ -542,242 +604,182 @@
             const exportBtn = document.getElementById('exportBtn');
             const editModeBtn = document.getElementById('editModeBtn');
             const totalDepthSpan = document.getElementById('totalDepth');
+            const waterDepthDisplay = document.getElementById('waterDepthDisplay');
+            const boreIdInput = document.getElementById('boreId');
+            const generateBtn = document.getElementById('generateBtn');
             
-            // New elements for borehole details
-            const holeTypeSelect = document.getElementById('holeType');
-            const updateBoreholeDetailsBtn = document.getElementById('updateBoreholeDetails');
+            // Tab navigation elements
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
             
             // State
             let layers = [];
             let constructionElements = [];
             let annulusElements = [];
-            let segmentHeight = 10;
+            let segmentHeight = 8; // Smaller default segment height for compact view
             let isEditMode = false;
             let totalHoleDepth = parseFloat(totalHoleDepthInput.value);
             let waterDepth = null;
-            let holeType = holeTypeSelect.value;
+            let boreId = '';
             
             // Initialize form fields
             fromDepthInput.value = '0';
             constructionFromDepthInput.value = '0';
             annulusFromDepthInput.value = '0';
             
-            // Material type selection changes color
-            materialTypeSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                if (selectedOption.dataset.color) {
-                    layerColorInput.value = selectedOption.dataset.color;
-                    colorPreview.style.backgroundColor = selectedOption.dataset.color;
-                }
+            // Tab navigation
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // Update active tab button
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding tab content
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                        if (content.id === `${tabId}-tab`) {
+                            content.classList.remove('hidden');
+                        }
+                    });
+                });
             });
             
-            // Construction type selection changes color
-            constructionTypeSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                if (selectedOption.dataset.color) {
-                    constructionColorInput.value = selectedOption.dataset.color;
-                    constructionColorPreview.style.backgroundColor = selectedOption.dataset.color;
-                }
-            });
-            
-            // Annulus type selection changes color
-            annulusTypeSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                if (selectedOption.dataset.color) {
-                    annulusColorInput.value = selectedOption.dataset.color;
-                    annulusColorPreview.style.backgroundColor = selectedOption.dataset.color;
-                }
-            });
-            
-            // Color input changes preview
-            layerColorInput.addEventListener('input', function() {
-                colorPreview.style.backgroundColor = this.value;
-            });
-            
-            constructionColorInput.addEventListener('input', function() {
-                constructionColorPreview.style.backgroundColor = this.value;
-            });
-            
-            annulusColorInput.addEventListener('input', function() {
-                annulusColorPreview.style.backgroundColor = this.value;
-            });
-            
-            // Total hole depth change handler
-            totalHoleDepthInput.addEventListener('change', function() {
-                totalHoleDepth = parseFloat(this.value);
+            // Event listeners for total depth and water depth changes
+            generateBtn.addEventListener('click', function() {
+                totalHoleDepth = parseFloat(totalHoleDepthInput.value);
                 if (isNaN(totalHoleDepth) || totalHoleDepth <= 0) {
                     totalHoleDepth = 30;
-                    this.value = 30;
+                    totalHoleDepthInput.value = 30;
                 }
-            });
-            
-            // Water depth change handler
-            waterDepthInput.addEventListener('change', function() {
-                waterDepth = parseFloat(this.value);
-                if (isNaN(waterDepth)) {
-                    waterDepth = null;
-                    this.value = '';
+                
+                waterDepth = waterDepthInput.value === '' ? null : parseFloat(waterDepthInput.value);
+                
+                if (waterDepth !== null) {
+                    waterDepthDisplay.querySelector('span').textContent = waterDepth;
+                    waterDepthDisplay.classList.remove('hidden');
+                } else {
+                    waterDepthDisplay.classList.add('hidden');
                 }
-            });
-            
-            // Hole type change handler
-            holeTypeSelect.addEventListener('change', function() {
-                holeType = this.value;
-            });
-            
-            // Update borehole details
-            updateBoreholeDetailsBtn.addEventListener('click', function() {
+                
+                totalDepthSpan.textContent = `Total depth: ${totalHoleDepth} m`;
                 generateBorehole();
+                
+                // Show success animation
+                this.innerHTML = '<i class="fas fa-check mr-1"></i> Updated!';
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Update';
+                }, 1500);
             });
             
-            // Layer Form submission
+            // Form submissions
             layerForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const fromDepth = parseFloat(fromDepthInput.value);
                 const toDepth = parseFloat(toDepthInput.value);
                 const materialType = materialTypeSelect.value;
-                const color = layerColorInput.value;
+                const selectedOption = materialTypeSelect.options[materialTypeSelect.selectedIndex];
+                const color = selectedOption.dataset.color;
                 
-                if (isNaN(fromDepth) || isNaN(toDepth)) {
-                    alert('Please enter valid depth values');
-                    return;
+                if (validateDepthInputs(fromDepth, toDepth, totalHoleDepth)) {
+                    layers.push({
+                        id: Date.now(),
+                        fromDepth,
+                        toDepth,
+                        materialType,
+                        color
+                    });
+                    
+                    updateLayerList();
+                    generateBorehole();
+                    
+                    // Reset form
+                    fromDepthInput.value = toDepth;
+                    toDepthInput.value = '';
+                    materialTypeSelect.selectedIndex = 0;
+                    
+                    // Show success animation
+                    const addBtn = layerForm.querySelector('button[type="submit"]');
+                    addBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Added!';
+                    setTimeout(() => {
+                        addBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add Layer';
+                    }, 1000);
                 }
-                
-                if (fromDepth >= toDepth) {
-                    alert('"From Depth" must be less than "To Depth"');
-                    return;
-                }
-                
-                if (toDepth > totalHoleDepth) {
-                    alert('"To Depth" cannot exceed the Total Hole Depth');
-                    return;
-                }
-                
-                if (!materialType) {
-                    alert('Please select a material type');
-                    return;
-                }
-                
-                const newLayer = {
-                    id: Date.now(),
-                    fromDepth,
-                    toDepth,
-                    materialType,
-                    color
-                };
-                
-                layers.push(newLayer);
-                updateLayerList();
-                generateBorehole();
-                
-                // Update From Depth to the To Depth after successful submission
-                fromDepthInput.value = toDepth;
-                toDepthInput.value = '';
-                materialTypeSelect.selectedIndex = 0;
-                layerColorInput.value = '#33FF57';
-                colorPreview.style.backgroundColor = '#33FF57';
             });
             
-            // Construction Form submission
             constructionForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const fromDepth = parseFloat(constructionFromDepthInput.value);
                 const toDepth = parseFloat(constructionToDepthInput.value);
                 const constructionType = constructionTypeSelect.value;
-                const color = constructionColorInput.value;
+                const selectedOption = constructionTypeSelect.options[constructionTypeSelect.selectedIndex];
+                const color = selectedOption.dataset.color;
                 
-                if (isNaN(fromDepth) || isNaN(toDepth)) {
-                    alert('Please enter valid depth values');
-                    return;
+                if (validateDepthInputs(fromDepth, toDepth, totalHoleDepth)) {
+                   constructionElements.push({
+  id: Date.now(),
+  fromDepth,
+  toDepth,
+  constructionType,
+  color
+});
+                    
+                    updateConstructionList();
+                    generateBorehole();
+                    
+                    // Reset form
+                    constructionFromDepthInput.value = toDepth;
+                    constructionToDepthInput.value = '';
+                    constructionTypeSelect.selectedIndex = 0;
+                    
+                    // Show success animation
+                    const addBtn = constructionForm.querySelector('button[type="submit"]');
+                    addBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Added!';
+                    setTimeout(() => {
+                        addBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add Construction';
+                    }, 1000);
                 }
-                
-                if (fromDepth >= toDepth) {
-                    alert('"From Depth" must be less than "To Depth"');
-                    return;
-                }
-                
-                if (constructionType !== 'Headworks' && toDepth > totalHoleDepth) {
-                    alert('"To Depth" cannot exceed the Total Hole Depth');
-                    return;
-                }
-                
-                if (!constructionType) {
-                    alert('Please select a construction type');
-                    return;
-                }
-                
-                const newConstruction = {
-                    id: Date.now(),
-                    fromDepth,
-                    toDepth,
-                    constructionType,
-                    color
-                };
-                
-                constructionElements.push(newConstruction);
-                updateConstructionList();
-                generateBorehole();
-                
-                // Update From Depth to the To Depth after successful submission
-                constructionFromDepthInput.value = toDepth;
-                constructionToDepthInput.value = '';
-                constructionTypeSelect.selectedIndex = 0;
-                constructionColorInput.value = '#8B4513';
-                constructionColorPreview.style.backgroundColor = '#8B4513';
             });
             
-            // Annulus Form submission
             annulusForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const fromDepth = parseFloat(annulusFromDepthInput.value);
                 const toDepth = parseFloat(annulusToDepthInput.value);
                 const annulusType = annulusTypeSelect.value;
-                const color = annulusColorInput.value;
+                const selectedOption = annulusTypeSelect.options[annulusTypeSelect.selectedIndex];
+                const color = selectedOption.dataset.color;
                 
-                if (isNaN(fromDepth) || isNaN(toDepth)) {
-                    alert('Please enter valid depth values');
-                    return;
+                if (validateDepthInputs(fromDepth, toDepth, totalHoleDepth)) {
+                    annulusElements.push({
+                        id: Date.now(),
+                        fromDepth,
+                        toDepth,
+                        annulusType,
+                        color
+                    });
+                    
+                    updateAnnulusList();
+                    generateBorehole();
+                    
+                    // Reset form
+                    annulusFromDepthInput.value = toDepth;
+                    annulusToDepthInput.value = '';
+                    annulusTypeSelect.selectedIndex = 0;
+                    
+                    // Show success animation
+                    const addBtn = annulusForm.querySelector('button[type="submit"]');
+                    addBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Added!';
+                    setTimeout(() => {
+                        addBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add Annulus';
+                    }, 1000);
                 }
-                
-                if (fromDepth >= toDepth) {
-                    alert('"From Depth" must be less than "To Depth"');
-                    return;
-                }
-                
-                if (toDepth > totalHoleDepth) {
-                    alert('"To Depth" cannot exceed the Total Hole Depth');
-                    return;
-                }
-                
-                if (!annulusType) {
-                    alert('Please select an annulus type');
-                    return;
-                }
-                
-                const newAnnulus = {
-                    id: Date.now(),
-                    fromDepth,
-                    toDepth,
-                    annulusType,
-                    color
-                };
-                
-                annulusElements.push(newAnnulus);
-                updateAnnulusList();
-                generateBorehole();
-                
-                // Update From Depth to the To Depth after successful submission
-                annulusFromDepthInput.value = toDepth;
-                annulusToDepthInput.value = '';
-                annulusTypeSelect.selectedIndex = 0;
-                annulusColorInput.value = '#6B7280';
-                annulusColorPreview.style.backgroundColor = '#6B7280';
             });
             
-            // Clear all layers
+            // Clear buttons
             clearAllLayersBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all layers?')) {
                     layers = [];
@@ -785,10 +787,15 @@
                     generateBorehole();
                     fromDepthInput.value = '0';
                     toDepthInput.value = '';
+                    
+                    // Show cleared animation
+                    this.innerHTML = '<i class="fas fa-check mr-1"></i> Cleared!';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Clear';
+                    }, 1000);
                 }
             });
             
-            // Clear all construction
             clearAllConstructionBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all construction elements?')) {
                     constructionElements = [];
@@ -796,10 +803,15 @@
                     generateBorehole();
                     constructionFromDepthInput.value = '0';
                     constructionToDepthInput.value = '';
+                    
+                    // Show cleared animation
+                    this.innerHTML = '<i class="fas fa-check mr-1"></i> Cleared!';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Clear';
+                    }, 1000);
                 }
             });
             
-            // Clear all annulus
             clearAllAnnulusBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all annulus elements?')) {
                     annulusElements = [];
@@ -807,21 +819,39 @@
                     generateBorehole();
                     annulusFromDepthInput.value = '0';
                     annulusToDepthInput.value = '';
+                    
+                    // Show cleared animation
+                    this.innerHTML = '<i class="fas fa-check mr-1"></i> Cleared!';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Clear';
+                    }, 1000);
                 }
             });
             
             // Zoom controls
             zoomInBtn.addEventListener('click', function() {
-                if (segmentHeight < 20) {
-                    segmentHeight += 2;
+                if (segmentHeight < 15) {
+                    segmentHeight += 1;
                     generateBorehole();
+                    
+                    // Show zoom animation
+                    this.classList.add('text-indigo-800');
+                    setTimeout(() => {
+                        this.classList.remove('text-indigo-800');
+                    }, 300);
                 }
             });
             
             zoomOutBtn.addEventListener('click', function() {
-                if (segmentHeight > 5) {
-                    segmentHeight -= 2;
+                if (segmentHeight > 4) {
+                    segmentHeight -= 1;
                     generateBorehole();
+                    
+                    // Show zoom animation
+                    this.classList.add('text-indigo-800');
+                    setTimeout(() => {
+                        this.classList.remove('text-indigo-800');
+                    }, 300);
                 }
             });
             
@@ -833,45 +863,7 @@
                     : '<i class="fas fa-edit mr-1"></i> Edit Mode';
                 
                 if (!isEditMode) {
-                    // Save any changes made in edit mode
-                    const editInputs = document.querySelectorAll('.layer-edit-input, .construction-edit-input, .annulus-edit-input');
-                    editInputs.forEach(input => {
-                        const id = parseInt(input.dataset.id);
-                        const property = input.dataset.property;
-                        const value = input.value;
-                        
-                        // Update layers
-                        const layer = layers.find(l => l.id === id);
-                        if (layer) {
-                            if (property === 'fromDepth' || property === 'toDepth') {
-                                layer[property] = parseFloat(value);
-                            } else {
-                                layer[property] = value;
-                            }
-                        }
-                        
-                        // Update construction elements
-                        const construction = constructionElements.find(c => c.id === id);
-                        if (construction) {
-                            if (property === 'fromDepth' || property === 'toDepth') {
-                                construction[property] = parseFloat(value);
-                            } else {
-                                construction[property] = value;
-                            }
-                        }
-                        
-                        // Update annulus elements
-                        const annulus = annulusElements.find(a => a.id === id);
-                        if (annulus) {
-                            if (property === 'fromDepth' || property === 'toDepth') {
-                                annulus[property] = parseFloat(value);
-                            } else {
-                                annulus[property] = value;
-                            }
-                        }
-                    });
-                    
-                    generateBorehole();
+                    saveEditChanges();
                 }
                 
                 updateLayerList();
@@ -881,45 +873,138 @@
             
             // Export functionality
             exportBtn.addEventListener('click', function() {
-                alert('Export functionality would save the borehole schematic as an image or PDF in a real application.');
+                exportToPDF();
             });
             
-            // Update the layer list display
+            // Helper functions
+            function validateDepthInputs(fromDepth, toDepth, maxDepth) {
+                if (isNaN(fromDepth) || isNaN(toDepth)) {
+                    showAlert('Please enter valid depth values', 'error');
+                    return false;
+                }
+                
+                if (fromDepth >= toDepth) {
+                    showAlert('"From Depth" must be less than "To Depth"', 'error');
+                    return false;
+                }
+                
+                if (toDepth > maxDepth) {
+                    showAlert('"To Depth" cannot exceed the Total Hole Depth', 'error');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            function showAlert(message, type) {
+                const alert = document.createElement('div');
+                alert.className = `fixed top-4 right-4 p-3 rounded-lg shadow-lg text-white text-sm ${
+                    type === 'error' ? 'bg-red-500' : 'bg-green-500'
+                }`;
+                alert.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} mr-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.classList.add('opacity-0');
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 300);
+                }, 3000);
+            }
+            
+            function saveEditChanges() {
+                document.querySelectorAll('.layer-edit-input, .construction-edit-input, .annulus-edit-input').forEach(input => {
+                    const id = parseInt(input.dataset.id);
+                    const property = input.dataset.property;
+                    const value = input.value;
+                    
+                    // Update layers
+                    const layer = layers.find(l => l.id === id);
+                    if (layer) {
+                        layer[property] = property.includes('Depth') ? parseFloat(value) : value;
+                        
+                        // Update color if material type changed
+                        if (property === 'materialType') {
+                            const selectedOption = Array.from(materialTypeSelect.options).find(opt => opt.value === value);
+                            if (selectedOption && selectedOption.dataset.color) {
+                                layer.color = selectedOption.dataset.color;
+                            }
+                        }
+                    }
+                    
+                    // Update construction elements
+                    const construction = constructionElements.find(c => c.id === id);
+                    if (construction) {
+                        construction[property] = property.includes('Depth') ? parseFloat(value) : value;
+                        
+                        // Update color if construction type changed
+                        if (property === 'constructionType') {
+                            const selectedOption = Array.from(constructionTypeSelect.options).find(opt => opt.value === value);
+                            if (selectedOption && selectedOption.dataset.color) {
+                                construction.color = selectedOption.dataset.color;
+                            }
+                        }
+                    }
+                    
+                    // Update annulus elements
+                    const annulus = annulusElements.find(a => a.id === id);
+                    if (annulus) {
+                        annulus[property] = property.includes('Depth') ? parseFloat(value) : value;
+                        
+                        // Update color if annulus type changed
+                        if (property === 'annulusType') {
+                            const selectedOption = Array.from(annulusTypeSelect.options).find(opt => opt.value === value);
+                            if (selectedOption && selectedOption.dataset.color) {
+                                annulus.color = selectedOption.dataset.color;
+                            }
+                        }
+                    }
+                });
+                
+                generateBorehole();
+                showAlert('Changes saved successfully', 'success');
+            }
+            
             function updateLayerList() {
                 if (layers.length === 0) {
-                    layerList.innerHTML = '<div class="p-3 text-center text-gray-500">No layers added yet</div>';
+                    layerList.innerHTML = `
+                        <div class="empty-state p-2 text-center text-gray-400 text-xs">
+                            <i class="fas fa-layer-group text-lg mb-1 text-gray-300"></i>
+                            <p>No layers added</p>
+                        </div>
+                    `;
                     return;
                 }
                 
-                // Sort layers by depth
                 const sortedLayers = [...layers].sort((a, b) => a.fromDepth - b.fromDepth);
-                
                 layerList.innerHTML = '';
                 
                 sortedLayers.forEach(layer => {
                     const layerElement = document.createElement('div');
-                    layerElement.className = 'p-3 hover:bg-gray-50 group';
+                    layerElement.className = 'compact-list-item hover:bg-gray-50 group';
                     layerElement.dataset.id = layer.id;
                     
                     if (isEditMode) {
                         layerElement.innerHTML = `
-                            <div class="grid grid-cols-4 gap-2 items-center">
+                            <div class="grid grid-cols-4 gap-1 items-center">
                                 <div>
-                                    <label class="text-xs text-gray-500 block">From</label>
                                     <input type="number" step="0.5" value="${layer.fromDepth}" 
                                            data-id="${layer.id}" data-property="fromDepth"
-                                           class="layer-edit-input w-full text-sm border rounded p-1">
+                                           class="layer-edit-input w-full text-xs border rounded p-1">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 block">To</label>
                                     <input type="number" step="0.5" value="${layer.toDepth}" 
                                            data-id="${layer.id}" data-property="toDepth"
-                                           class="layer-edit-input w-full text-sm border rounded p-1">
+                                           class="layer-edit-input w-full text-xs border rounded p-1">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 block">Material</label>
                                     <select data-id="${layer.id}" data-property="materialType"
-                                            class="layer-edit-input w-full text-sm border rounded p-1">
+                                            class="layer-edit-input w-full text-xs border rounded p-1">
                                         ${Array.from(materialTypeSelect.options).map(option => 
                                             `<option value="${option.value}" ${option.value === layer.materialType ? 'selected' : ''}
                                              ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
@@ -928,11 +1013,8 @@
                                         ).join('')}
                                     </select>
                                 </div>
-                                <div class="flex items-end space-x-2">
-                                    <input type="color" value="${layer.color}" 
-                                           data-id="${layer.id}" data-property="color"
-                                           class="layer-edit-input h-8 w-8">
-                                    <button class="delete-layer text-red-500 hover:text-red-700" data-id="${layer.id}">
+                                <div class="flex justify-end">
+                                    <button class="delete-layer text-red-500 hover:text-red-700 text-xs" data-id="${layer.id}">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -941,14 +1023,14 @@
                     } else {
                         layerElement.innerHTML = `
                             <div class="flex justify-between items-center">
-                                <div class="flex items-center">
+                                <div class="flex items-center truncate">
                                     <div class="color-preview mr-2" style="background-color: ${layer.color};"></div>
-                                    <div>
-                                        <div class="font-medium">${layer.materialType}</div>
+                                    <div class="truncate">
+                                        <div class="font-medium truncate">${layer.materialType}</div>
                                         <div class="text-xs text-gray-500">${layer.fromDepth}m - ${layer.toDepth}m</div>
                                     </div>
                                 </div>
-                                <button class="delete-layer opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700" data-id="${layer.id}">
+                                <button class="delete-layer opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs" data-id="${layer.id}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -965,67 +1047,46 @@
                         layers = layers.filter(layer => layer.id !== id);
                         updateLayerList();
                         generateBorehole();
+                        showAlert('Layer removed', 'success');
                     });
                 });
-                
-                // Add material type change listeners in edit mode
-                if (isEditMode) {
-                    document.querySelectorAll('select[data-property="materialType"]').forEach(select => {
-                        select.addEventListener('change', function() {
-                            const selectedOption = this.options[this.selectedIndex];
-                            if (selectedOption.dataset.color) {
-                                const id = parseInt(this.dataset.id);
-                                const layer = layers.find(l => l.id === id);
-                                if (layer) {
-                                    layer.color = selectedOption.dataset.color;
-                                }
-                                // Update the color input
-                                const colorInput = document.querySelector(`input[data-id="${id}"][data-property="color"]`);
-                                if (colorInput) {
-                                    colorInput.value = selectedOption.dataset.color;
-                                }
-                            }
-                        });
-                    });
-                }
             }
             
-            // Update the construction list display
             function updateConstructionList() {
                 if (constructionElements.length === 0) {
-                    constructionList.innerHTML = '<div class="p-3 text-center text-gray-500">No construction added yet</div>';
+                    constructionList.innerHTML = `
+                        <div class="empty-state p-2 text-center text-gray-400 text-xs">
+                            <i class="fas fa-hammer text-lg mb-1 text-gray-300"></i>
+                            <p>No construction added</p>
+                        </div>
+                    `;
                     return;
                 }
                 
-                // Sort construction by depth
                 const sortedConstruction = [...constructionElements].sort((a, b) => a.fromDepth - b.fromDepth);
-                
                 constructionList.innerHTML = '';
                 
                 sortedConstruction.forEach(construction => {
                     const constructionElement = document.createElement('div');
-                    constructionElement.className = 'p-3 hover:bg-gray-50 group';
+                    constructionElement.className = 'compact-list-item hover:bg-gray-50 group';
                     constructionElement.dataset.id = construction.id;
                     
                     if (isEditMode) {
                         constructionElement.innerHTML = `
-                            <div class="grid grid-cols-4 gap-2 items-center">
+                            <div class="grid grid-cols-4 gap-1 items-center">
                                 <div>
-                                    <label class="text-xs text-gray-500 block">From</label>
                                     <input type="number" step="0.5" value="${construction.fromDepth}" 
                                            data-id="${construction.id}" data-property="fromDepth"
-                                           class="construction-edit-input w-full text-sm border rounded p-1">
+                                           class="construction-edit-input w-full text-xs border rounded p-1">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 block">To</label>
                                     <input type="number" step="0.5" value="${construction.toDepth}" 
                                            data-id="${construction.id}" data-property="toDepth"
-                                           class="construction-edit-input w-full text-sm border rounded p-1">
+                                           class="construction-edit-input w-full text-xs border rounded p-1">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 block">Type</label>
                                     <select data-id="${construction.id}" data-property="constructionType"
-                                            class="construction-edit-input w-full text-sm border rounded p-1">
+                                            class="construction-edit-input w-full text-xs border rounded p-1">
                                         ${Array.from(constructionTypeSelect.options).map(option => 
                                             `<option value="${option.value}" ${option.value === construction.constructionType ? 'selected' : ''}
                                              ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
@@ -1034,11 +1095,8 @@
                                         ).join('')}
                                     </select>
                                 </div>
-                                <div class="flex items-end space-x-2">
-                                    <input type="color" value="${construction.color}" 
-                                           data-id="${construction.id}" data-property="color"
-                                           class="construction-edit-input h-8 w-8">
-                                    <button class="delete-construction text-red-500 hover:text-red-700" data-id="${construction.id}">
+                                <div class="flex justify-end">
+                                    <button class="delete-construction text-red-500 hover:text-red-700 text-xs" data-id="${construction.id}">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -1047,14 +1105,14 @@
                     } else {
                         constructionElement.innerHTML = `
                             <div class="flex justify-between items-center">
-                                <div class="flex items-center">
+                                <div class="flex items-center truncate>
                                     <div class="color-preview mr-2" style="background-color: ${construction.color};"></div>
-                                    <div>
-                                        <div class="font-medium">${construction.constructionType}</div>
+                                    <div class="truncate">
+                                        <div class="font-medium truncate">${construction.constructionType}</div>
                                         <div class="text-xs text-gray-500">${construction.fromDepth}m - ${construction.toDepth}m</div>
                                     </div>
                                 </div>
-                                <button class="delete-construction opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700" data-id="${construction.id}">
+                                <button class="delete-construction opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs" data-id="${construction.id}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -1071,67 +1129,46 @@
                         constructionElements = constructionElements.filter(construction => construction.id !== id);
                         updateConstructionList();
                         generateBorehole();
+                        showAlert('Construction element removed', 'success');
                     });
                 });
-                
-                // Add construction type change listeners in edit mode
-                if (isEditMode) {
-                    document.querySelectorAll('select[data-property="constructionType"]').forEach(select => {
-                        select.addEventListener('change', function() {
-                            const selectedOption = this.options[this.selectedIndex];
-                            if (selectedOption.dataset.color) {
-                                const id = parseInt(this.dataset.id);
-                                const construction = constructionElements.find(c => c.id === id);
-                                if (construction) {
-                                    construction.color = selectedOption.dataset.color;
-                                }
-                                // Update the color input
-                                const colorInput = document.querySelector(`input[data-id="${id}"][data-property="color"]`);
-                                if (colorInput) {
-                                    colorInput.value = selectedOption.dataset.color;
-                                }
-                            }
-                        });
-                    });
-                }
             }
             
-            // Update the annulus list display
             function updateAnnulusList() {
                 if (annulusElements.length === 0) {
-                    annulusList.innerHTML = '<div class="p-3 text-center text-gray-500">No annulus added yet</div>';
+                    annulusList.innerHTML = `
+                        <div class="empty-state p-2 text-center text-gray-400 text-xs">
+                            <i class="fas fa-fill-drip text-lg mb-1 text-gray-300"></i>
+                            <p>No annulus added</p>
+                        </div>
+                    `;
                     return;
                 }
                 
-                // Sort annulus by depth
                 const sortedAnnulus = [...annulusElements].sort((a, b) => a.fromDepth - b.fromDepth);
-                
                 annulusList.innerHTML = '';
                 
                 sortedAnnulus.forEach(annulus => {
                     const annulusElement = document.createElement('div');
-                    annulusElement.className = 'p-3 hover:bg-gray-50 group';
+                    annulusElement.className = 'compact-list-item hover:bg-gray-50 group';
                     annulusElement.dataset.id = annulus.id;
                     
                     if (isEditMode) {
                         annulusElement.innerHTML = `
-                            <div class="grid grid-cols-4 gap-2 items-center">
+                            <div class="grid grid-cols-4 gap-1 items-center">
                                 <div>
-                                    <label class="text-xs text-gray-500 block">From</label>
                                     <input type="number" step="0.5" value="${annulus.fromDepth}" 
                                            data-id="${annulus.id}" data-property="fromDepth"
-                                           class="annulus-edit-input w-full text-sm border rounded p-1">
+                                           class="annulus-edit-input w-full text-xs border rounded p-1">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 block">To</label>
                                     <input type="number" step="0.5" value="${annulus.toDepth}" 
                                            data-id="${annulus.id}" data-property="toDepth"
-                                           class="annulus-edit-input w-full text-sm border rounded p-1">
+                                           class="annulus-edit-input w-full text-xs border rounded p-1">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-500 block">Type</label>
                                     <select data-id="${annulus.id}" data-property="annulusType"
-                                            class="annulus-edit-input w-full text-sm border rounded p-1">
+                                            class="annulus-edit-input w-full text-xs border rounded p-1">
                                         ${Array.from(annulusTypeSelect.options).map(option => 
                                             `<option value="${option.value}" ${option.value === annulus.annulusType ? 'selected' : ''}
                                              ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
@@ -1140,11 +1177,8 @@
                                         ).join('')}
                                     </select>
                                 </div>
-                                <div class="flex items-end space-x-2">
-                                    <input type="color" value="${annulus.color}" 
-                                           data-id="${annulus.id}" data-property="color"
-                                           class="annulus-edit-input h-8 w-8">
-                                    <button class="delete-annulus text-red-500 hover:text-red-700" data-id="${annulus.id}">
+                                <div class="flex justify-end">
+                                    <button class="delete-annulus text-red-500 hover:text-red-700 text-xs" data-id="${annulus.id}">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -1153,14 +1187,14 @@
                     } else {
                         annulusElement.innerHTML = `
                             <div class="flex justify-between items-center">
-                                <div class="flex items-center">
+                                <div class="flex items-center truncate">
                                     <div class="color-preview mr-2" style="background-color: ${annulus.color};"></div>
-                                    <div>
-                                        <div class="font-medium">${annulus.annulusType}</div>
+                                    <div class="truncate">
+                                        <div class="font-medium truncate">${annulus.annulusType}</div>
                                         <div class="text-xs text-gray-500">${annulus.fromDepth}m - ${annulus.toDepth}m</div>
                                     </div>
                                 </div>
-                                <button class="delete-annulus opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700" data-id="${annulus.id}">
+                                <button class="delete-annulus opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs" data-id="${annulus.id}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -1177,32 +1211,11 @@
                         annulusElements = annulusElements.filter(annulus => annulus.id !== id);
                         updateAnnulusList();
                         generateBorehole();
+                        showAlert('Annulus element removed', 'success');
                     });
                 });
-                
-                // Add annulus type change listeners in edit mode
-                if (isEditMode) {
-                    document.querySelectorAll('select[data-property="annulusType"]').forEach(select => {
-                        select.addEventListener('change', function() {
-                            const selectedOption = this.options[this.selectedIndex];
-                            if (selectedOption.dataset.color) {
-                                const id = parseInt(this.dataset.id);
-                                const annulus = annulusElements.find(a => a.id === id);
-                                if (annulus) {
-                                    annulus.color = selectedOption.dataset.color;
-                                }
-                                // Update the color input
-                                const colorInput = document.querySelector(`input[data-id="${id}"][data-property="color"]`);
-                                if (colorInput) {
-                                    colorInput.value = selectedOption.dataset.color;
-                                }
-                            }
-                        });
-                    });
-                }
             }
             
-            // Generate the borehole visualization
             function generateBorehole() {
                 // Clear existing borehole
                 geologyLeft.innerHTML = '';
@@ -1212,9 +1225,6 @@
                 geologyRight.innerHTML = '';
                 depthScale.innerHTML = '';
                 groundLevel.innerHTML = '';
-                
-                // Update total depth display
-                totalDepthSpan.textContent = `Total depth: ${totalHoleDepth} m`;
                 
                 // Find the minimum depth (for headworks that might be above ground)
                 let minDepth = 0;
@@ -1235,6 +1245,9 @@
                 waterLevel.style.height = `${containerHeight}px`;
                 geologyRight.style.height = `${containerHeight}px`;
                 depthScale.style.height = `${containerHeight}px`;
+                
+                // Set wrapper height to match container
+                boreholeWrapper.style.height = `${containerHeight}px`;
                 
                 // Create ground level indicator (at 0m)
                 const groundLevelPosition = (0 - minDepth) * 2 * segmentHeight;
@@ -1272,11 +1285,9 @@
                         currentDepth >= layer.fromDepth && currentDepth < layer.toDepth
                     );
                     
-                    if (matchingLayer) {
-                        segment.style.backgroundColor = hexToRgba(matchingLayer.color, 0.8);
-                    } else {
-                        segment.style.backgroundColor = 'rgba(243, 244, 246, 0.8)';
-                    }
+                    segment.style.backgroundColor = matchingLayer 
+                        ? hexToRgba(matchingLayer.color, 0.8) 
+                        : 'rgba(243, 244, 246, 0.8)';
                     
                     geologyLeft.appendChild(segment);
                 }
@@ -1302,13 +1313,10 @@
                             const rightLabel = document.createElement('div');
                             rightLabel.className = 'right-label';
                             rightLabel.style.top = `${i * segmentHeight}px`;
-                            rightLabel.textContent = `${matchingLayer.materialType}`;
-                            
-                            // Add depth range label
-                            const depthLabel = document.createElement('div');
-                            depthLabel.className = 'text-xs text-gray-500';
-                            depthLabel.textContent = `${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m`;
-                            rightLabel.appendChild(depthLabel);
+                            rightLabel.innerHTML = `
+                                <div class="font-medium">${matchingLayer.materialType}</div>
+                                <div class="text-xs text-gray-500">${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m</div>
+                            `;
                             
                             geologyRight.appendChild(rightLabel);
                         }
@@ -1319,7 +1327,7 @@
                     geologyRight.appendChild(segment);
                 }
                 
-                // Add annulus construction elements (wider than bore construction)
+                // Add annulus construction elements
                 annulusElements.forEach(annulus => {
                     const fromPosition = (annulus.fromDepth - minDepth) * 2 * segmentHeight;
                     const height = (annulus.toDepth - annulus.fromDepth) * 2 * segmentHeight;
@@ -1327,23 +1335,28 @@
                     if (height <= 0) return;
                     
                     const annulusContainer = document.createElement('div');
-                    annulusContainer.className = `absolute ${getAnnulusPatternClass(annulus.annulusType)}`;
+                    annulusContainer.className = 'absolute';
                     annulusContainer.style.top = `${fromPosition}px`;
                     annulusContainer.style.height = `${height}px`;
-                    annulusContainer.style.width = '100px';
+                    annulusContainer.style.width = '80px';
                     annulusContainer.style.left = '50%';
                     annulusContainer.style.transform = 'translateX(-50%)';
                     annulusContainer.style.backgroundColor = annulus.color;
-                    annulusContainer.style.borderLeft = '2px solid rgba(0,0,0,0.2)';
-                    annulusContainer.style.borderRight = '2px solid rgba(0,0,0,0.2)';
+                    annulusContainer.style.borderLeft = '1px solid rgba(0,0,0,0.2)';
+                    annulusContainer.style.borderRight = '1px solid rgba(0,0,0,0.2)';
                     annulusContainer.style.zIndex = '1';
+                    annulusContainer.style.borderRadius = '3px';
                     
-                    // Add annulus label in the middle of the element
+                    // Add annulus label on the left side
                     const label = document.createElement('div');
-                    label.className = 'segment-label';
-                    label.textContent = annulus.annulusType;
-                    annulusContainer.appendChild(label);
+                    label.className = 'annulus-label';
+                    label.style.top = `${height / 2 - 10}px`; // Center vertically
+                    label.innerHTML = `
+                        <div class="font-medium">${annulus.annulusType}</div>
+                        <div class="text-xs text-gray-500">${annulus.fromDepth}m - ${annulus.toDepth}m</div>
+                    `;
                     
+                    annulusContainer.appendChild(label);
                     annulusConstruction.appendChild(annulusContainer);
                 });
                 
@@ -1361,19 +1374,23 @@
                         waterContainer.style.borderLeft = '1px solid rgba(0, 119, 255, 0.7)';
                         waterContainer.style.borderRight = '1px solid rgba(0, 119, 255, 0.7)';
                         waterContainer.style.zIndex = '4';
+                        waterContainer.style.borderRadius = '3px';
                         
-                        // Add water level label at the exact water depth
+                        // Add water level label
                         const label = document.createElement('div');
                         label.className = 'water-level-label';
-                        label.style.top = '0px';
-                        label.textContent = 'Water Level';
+                        label.style.top = '8px';
+                        label.innerHTML = `
+                            <i class="fas fa-tint mr-1"></i> Water Level
+                            <div class="text-xs">${waterDepth}m depth</div>
+                        `;
                         waterContainer.appendChild(label);
                         
                         waterLevel.appendChild(waterContainer);
                     }
                 }
                 
-                // Add construction elements (center)
+                // Add construction elements
                 constructionElements.forEach(construction => {
                     const fromPosition = (construction.fromDepth - minDepth) * 2 * segmentHeight;
                     const height = (construction.toDepth - construction.fromDepth) * 2 * segmentHeight;
@@ -1381,50 +1398,29 @@
                     if (height <= 0) return;
                     
                     const constructionContainer = document.createElement('div');
-                    constructionContainer.className = `absolute ${getConstructionPatternClass(construction.constructionType)}`;
+                    constructionContainer.className = 'absolute';
                     constructionContainer.style.top = `${fromPosition}px`;
                     constructionContainer.style.height = `${height}px`;
-                    constructionContainer.style.width = '60px';
+                    constructionContainer.style.width = '40px';
                     constructionContainer.style.left = '50%';
                     constructionContainer.style.transform = 'translateX(-50%)';
                     constructionContainer.style.backgroundColor = construction.color;
-                    constructionContainer.style.borderLeft = '2px solid rgba(0,0,0,0.2)';
-                    constructionContainer.style.borderRight = '2px solid rgba(0,0,0,0.2)';
+                    constructionContainer.style.borderLeft = '1px solid rgba(0,0,0,0.2)';
+                    constructionContainer.style.borderRight = '1px solid rgba(0,0,0,0.2)';
                     constructionContainer.style.zIndex = '2';
+                    constructionContainer.style.borderRadius = '3px';
                     
-                    // Add construction label in the middle of the construction element
+                    // Add construction label
                     const label = document.createElement('div');
                     label.className = 'segment-label';
-                    label.textContent = construction.constructionType;
+                    label.innerHTML = `
+                        <div class="text-xs">${construction.constructionType}</div>
+                        <div class="text-2xs">${construction.fromDepth}m - ${construction.toDepth}m</div>
+                    `;
                     constructionContainer.appendChild(label);
                     
                     boreConstruction.appendChild(constructionContainer);
                 });
-            }
-            
-            // Helper function to get pattern class based on construction type
-            function getConstructionPatternClass(constructionType) {
-                switch(constructionType) {
-                    case 'Headworks': return 'headworks-pattern';
-                    case 'Surface Casing': return 'surface-casing-pattern';
-                    case 'Blank Casing': return 'blank-casing-pattern';
-                    case 'Slotted Casing 1': return 'slotted-casing-1-pattern';
-                    case 'Screens': return 'screens-pattern';
-                    case 'Slotted Casing 2': return 'slotted-casing-2-pattern';
-                    case 'Sump': return 'sump-pattern';
-                    case 'Endcap': return 'endcap-pattern';
-                    default: return '';
-                }
-            }
-            
-            // Helper function to get pattern class based on annulus type
-            function getAnnulusPatternClass(annulusType) {
-                switch(annulusType) {
-                    case 'Grout': return 'grout-pattern';
-                    case 'Gravel': return 'gravel-pattern';
-                    case 'Bentonite': return 'bentonite-pattern';
-                    default: return '';
-                }
             }
             
             // Helper function to convert hex color to rgba with transparency
@@ -1432,8 +1428,86 @@
                 const r = parseInt(hex.slice(1, 3), 16);
                 const g = parseInt(hex.slice(3, 5), 16);
                 const b = parseInt(hex.slice(5, 7), 16);
-                
                 return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+            
+      // Export to PDF function
+            function exportToPDF() {
+                // Show loading state
+                exportBtn.classList.add('exporting');
+                
+                // Get the borehole container
+                const element = document.getElementById('boreholeContainer');
+                
+                // Get the bore ID for filename
+                const boreId = document.getElementById('boreId').value || 'borehole';
+                
+                // Use html2canvas to capture the element as an image
+                html2canvas(element, {
+                    scale: 2, // Higher quality
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true,
+                    scrollX: 0,
+                    scrollY: -window.scrollY
+                }).then(canvas => {
+                    // Create a new jsPDF instance
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm'
+                    });
+                    
+                    // Calculate dimensions
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = 190; // A4 width (210mm) with margins
+                    const pageHeight = 297; // A4 height (297mm)
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    
+                    // Add the image to the PDF
+                    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                    
+                  // get the page width
+const pageWidth = pdf.internal.pageSize.getWidth();
+
+// Add title in the top-right corner
+pdf.setFontSize(10);
+pdf.setTextColor(40, 40, 40);
+pdf.text(
+  boreId,
+  pageWidth - 10,   // 10 mm from right edge
+  20,               // 20 mm down from top
+  { align: 'right' }
+);
+
+// Add current date also in the top-right
+const today = new Date();
+pdf.setFontSize(10);
+pdf.text(
+  `Generated on: ${today.toLocaleDateString()}`,
+  pageWidth - 10,   // same right margin
+  25,               // just below the title
+  { align: 'right' }
+);
+
+                    // Add footer
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text('© Borehole Schematic Generator', 105, 287, { align: 'center' });
+                    
+                    // Save the PDF
+                    pdf.save(`${boreId}_borehole_schematic.pdf`);
+                    
+                    // Hide loading state
+                    exportBtn.classList.remove('exporting');
+                    
+                    // Show success notification
+                    showAlert('PDF exported successfully', 'success');
+                }).catch(error => {
+                    console.error('Error generating PDF:', error);
+                    showAlert('Error generating PDF. Please try again.', 'error');
+                    exportBtn.classList.remove('exporting');
+                });
             }
             
             // Initialize the borehole display
