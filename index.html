@@ -3,1516 +3,1642 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Borehole Schematic Generator</title>
+    <title>DrillTrack - Drilling Logs Application</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
-        }
-        
-        .input-field {
-            transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .input-field:focus {
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
-        }
-        
-        .borehole-container, .depth-scale, .geology-left, .geology-right, 
-        .bore-construction, .annulus-construction, .water-level {
-            position: absolute;
-        }
-        
-        .borehole-container {
-            margin-left: 40px;
-            width: calc(100% - 40px);
-        }
-        
-        .depth-scale {
-            left: -40px;
-            width: 40px;
-            border-right: 1px solid #e5e7eb;
-            background-color: #f9fafb;
-        }
-        
-        .depth-marker {
-            position: absolute;
-            right: 4px;
-            font-size: 0.65rem;
-            color: #555;
-        }
-        
-        .geology-left {
-            left: 0;
-            width: calc(50% - 60px);
-            background-color: #f9fafb;
-        }
-        
-        .geology-right {
-            right: 0;
-            width: calc(50% - 60px);
-            background-color: #f9fafb;
-        }
-        
-        .bore-construction {
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            z-index: 2;
-        }
-        
-        .annulus-construction {
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            z-index: 1;
-        }
-        
-        .water-level {
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            z-index: 4;
-        }
-        
-        .layer-segment {
-            position: relative;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        
-        .segment-label, .water-level-label, .right-label, .annulus-label {
-            position: absolute;
-            font-size: 0.6rem;
-            white-space: nowrap;
-        }
-        
-        .segment-label {
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-            font-weight: 500;
-        }
-        
-        .water-level-label {
-            left: 50%;
-            transform: translateX(-50%);
-            color: #0077FF;
-            text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
-            background-color: rgba(255,255,255,0.7);
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-weight: 500;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        
-        .right-label {
-            right: -100px;
-            color: #555;
-            width: 90px;
-            background: white;
-            padding: 4px 6px;
-            border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            font-weight: 500;
-        }
-        
-        .annulus-label {
-            left: -90px;
-            color: #555;
-            width: 80px;
-            text-align: right;
-            background-color: white;
-            padding: 4px 6px;
-            border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            font-weight: 500;
-        }
-        
-        .color-preview {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-right: 6px;
-            vertical-align: middle;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .ground-level {
-            position: absolute;
-            left: 0;
-            right: 0;
-            border-top: 2px dashed #6366f1;
-            z-index: 10;
-        }
-        
-        .ground-level-label {
-            position: absolute;
-            left: -40px;
-            font-size: 0.6rem;
-            color: #6366f1;
-            background-color: white;
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-weight: 600;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                position: sticky;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: linear-gradient(135deg, #1e293b 0%, #4c1d95 100%);
+                padding: 0 16px;
+                z-index: 1000;
+            }
+            .mobile-header h1 {
+                font-size: 17px;
+                font-weight: bold;
+                background-clip: text;
+                color: transparent;
+                background-image: linear-gradient(to right, #a78bfa, #60a5fa);
+            }
+            header.gradient-bg {
+                display: none;
+            }
+            #pagesContainer {
+                padding-top: 60px;
+            }
+            .container {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+            .gradient-card,
+            header.gradient-bg {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
         }
 
-        .export-spinner {
-            display: none;
-            margin-left: 6px;
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e293b 0%, #4c1d95 50%, #1d4ed8 100%);
         }
-
-        .exporting .export-spinner {
-            display: inline-block;
+        .gradient-card {
+            background: linear-gradient(145deg, #1e293b 0%, #1e1b4b 100%);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
-
-        .exporting .export-text {
+        /* Enhanced table row styling */
+        tr.plod-row {
+            border-bottom: 2px solid rgba(71, 85, 105, 0.5);
+            margin-bottom: 4px;
+            background-color: rgba(51, 65, 85, 0.7);
+        }
+        
+        tr.plod-row:hover {
+            background-color: rgba(71, 85, 105, 0.8);
+            box-shadow: 0 2px 4px -1px rgba(99, 102, 241, 0.2);
+        }
+        
+        tr.activity-row {
+            background-color: rgba(30, 41, 59, 0.4);
+            border-left: 3px solid rgb(99, 102, 241);
+        }
+        
+        tr.activity-row:hover {
+            background-color: rgba(51, 65, 85, 0.3);
+        }
+        
+        .activity-item {
+            transition: all 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
-        
-        /* Compact form styles */
-        .compact-form .form-group {
-            margin-bottom: 0.5rem;
+        .page {
+            display: none;
         }
-        
-        .compact-form label {
-            font-size: 0.75rem;
-            margin-bottom: 0.25rem;
+        .page.active {
             display: block;
-        }
-        
-        .compact-form input, .compact-form select {
-            padding: 0.35rem 0.5rem;
-            font-size: 0.8rem;
-        }
-        
-        .compact-form .btn {
-            padding: 0.35rem 0.75rem;
-            font-size: 0.8rem;
-        }
-        
-        /* Compact list styles */
-        .compact-list {
-            max-height: 120px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-        }
-        
-        .compact-list-item {
-            padding: 0.4rem 0.75rem;
-            border-bottom: 1px solid #f1f1f1;
-        }
-        
-        .compact-list-item:hover {
-            background-color: #f8fafc;
-        }
-        
-        /* Tab navigation */
-        .tab-nav {
-            display: flex;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .tab-btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
-        }
-        
-        .tab-btn.active {
-            border-bottom-color: #6366f1;
-            color: #6366f1;
-            font-weight: 500;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 1024px) {
-            .borehole-container {
-                margin-left: 30px;
-                width: calc(100% - 30px);
-            }
-            
-            .depth-scale {
-                left: -30px;
-                width: 30px;
-            }
-            
-            .geology-left, .geology-right {
-                width: calc(50% - 45px);
-            }
-            
-            .bore-construction {
-                width: 30px;
-            }
-            
-            .annulus-construction {
-                width: 60px;
-            }
-            
-            .water-level {
-                width: 30px;
-            }
         }
     </style>
 </head>
-<body class="min-h-screen">
-    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-4 shadow-sm">
-        <div class="container mx-auto">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl font-bold text-white">Borehole Schematic Generator</h1>
-                    <p class="text-indigo-100 text-xs">Create and export borehole diagrams</p>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <div class="bg-white/20 rounded-full p-1">
-                        <i class="fas fa-water text-white text-sm"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <!-- Mobile Header (shown only on small screens) -->
+    <div class="mobile-header">
+        <h1>DrillTrack</h1>
     </div>
-
-    <div class="container mx-auto px-4 py-4">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <!-- Left Panel - Forms -->
-            <div class="lg:col-span-2 space-y-4">
-                <!-- Borehole Details -->
-                <div class="card p-4">
-                    <div class="flex items-center mb-3">
-                        <div class="bg-indigo-100 p-1 rounded-lg mr-3">
-                            <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
-                        </div>
-                        <h2 class="text-base font-semibold text-gray-800">Borehole Details</h2>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="form-group">
-                            <label for="boreId" class="text-xs text-gray-600">Bore ID</label>
-                            <input type="text" id="boreId" class="input-field w-full px-3 py-1 text-sm rounded-md shadow-sm focus:outline-none" placeholder="BH-001">
-                        </div>
-                        <div class="form-group">
-                            <label for="totalHoleDepth" class="text-xs text-gray-600">Total Depth (m)</label>
-                            <input type="number" id="totalHoleDepth" step="0.5" min="0" value="30" class="input-field w-full px-3 py-1 text-sm rounded-md shadow-sm focus:outline-none" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="waterDepth" class="text-xs text-gray-600">Water Depth (m)</label>
-                            <input type="number" id="waterDepth" step="0.5" min="0" class="input-field w-full px-3 py-1 text-sm rounded-md shadow-sm focus:outline-none">
-                        </div>
-                        <div class="form-group flex items-end">
-                            <button id="generateBtn" class="btn-primary w-full py-1 px-3 rounded-md text-sm">
-                                <i class="fas fa-sync-alt mr-1"></i> Update
-                            </button>
-                        </div>
+    
+    <div class="container mx-auto px-2 md:px-4 py-4 md:py-8">
+        <!-- Desktop Header -->
+        <header class="gradient-bg rounded-xl p-6 mb-8 shadow-lg">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <i class="fas fa-clipboard-list text-4xl text-purple-300 mr-4"></i>
+                    <div>
+                        <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-blue-300">DrillTrack</h1>
+                        <p class="text-sm text-slate-300">Drilling Plod Tracker</p>
                     </div>
                 </div>
-
-                <!-- Tab Navigation -->
-                <div class="card">
-                    <div class="tab-nav">
-                        <button class="tab-btn active" data-tab="layers">
-                            <i class="fas fa-layer-group mr-1"></i> Layers
-                        </button>
-                        <button class="tab-btn" data-tab="construction">
-                            <i class="fas fa-hammer mr-1"></i> Construction
-                        </button>
-                        <button class="tab-btn" data-tab="annulus">
-                            <i class="fas fa-fill-drip mr-1"></i> Annulus
-                        </button>
-                    </div>
-                    
-                    <!-- Layers Tab -->
-                    <div class="tab-content p-4" id="layers-tab">
-                        <form id="layerForm" class="compact-form space-y-2">
-                            <div class="grid grid-cols-3 gap-2">
-                                <div class="form-group">
-                                    <label for="fromDepth">From (m)</label>
-                                    <input type="number" id="fromDepth" step="0.5" class="input-field w-full" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="toDepth">To (m)</label>
-                                    <input type="number" id="toDepth" step="0.5" class="input-field w-full" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="materialType">Material</label>
-                                    <select id="materialType" class="input-field w-full" required>
-                                        <option value="" disabled selected>Select</option>
-                                        <option value="Detritals" data-color="#FF5733">Detritals</option>
-                                        <option value="Pisolites" data-color="#33FF57">Pisolites</option>
-                                        <option value="Calcrete" data-color="#3357FF">Calcrete</option>
-                                        <option value="Clay" data-color="#F0FF33">Clay</option>
-                                        <option value="Sandstone" data-color="#FFC300">Sandstone</option>
-                                        <option value="Limestone" data-color="#50C878">Limestone</option>
-                                        <option value="Granite" data-color="#C0C0C0">Granite</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2 pt-1">
-                                <button type="submit" class="btn-primary flex-1 py-1 px-2 rounded-md text-xs">
-                                    <i class="fas fa-plus mr-1"></i> Add Layer
-                                </button>
-                                <button type="button" id="clearAllLayers" class="bg-gray-100 text-gray-700 py-1 px-2 rounded-md text-xs border border-gray-200 hover:bg-gray-50">
-                                    <i class="fas fa-trash-alt mr-1"></i> Clear
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="mt-3">
-                            <h3 class="text-xs font-medium text-gray-700 mb-1 flex items-center">
-                                <i class="fas fa-list-ul mr-1 text-gray-400"></i> Current Layers
-                            </h3>
-                            <div id="layerList" class="compact-list border rounded-md">
-                                <div class="empty-state p-2 text-center text-gray-400 text-xs">
-                                    <i class="fas fa-layer-group text-lg mb-1 text-gray-300"></i>
-                                    <p>No layers added</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Construction Tab -->
-                    <div class="tab-content p-4 hidden" id="construction-tab">
-                        <form id="constructionForm" class="compact-form space-y-2">
-                            <div class="grid grid-cols-3 gap-2">
-                                <div class="form-group">
-                                    <label for="constructionFromDepth">From (m)</label>
-                                    <input type="number" id="constructionFromDepth" step="0.5" class="input-field w-full" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="constructionToDepth">To (m)</label>
-                                    <input type="number" id="constructionToDepth" step="0.5" class="input-field w-full" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="constructionType">Type</label>
-                                    <select id="constructionType" class="input-field w-full" required>
-                                        <option value="" disabled selected>Select</option>
-                                        <option value="Headworks" data-color="#8B4513">Headworks</option>
-                                        <option value="Surface Casing" data-color="#A0522D">Surface Casing</option>
-                                        <option value="Blank Casing" data-color="#CD853F">Blank Casing</option>
-                                        <option value="Slotted Casing" data-color="#D2691E">Slotted Casing</option>
-                                        <option value="Screen" data-color="#B87333">Screen</option>
-                                        <option value="Riser Pipe" data-color="#6E260E">Riser Pipe</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2 pt-1">
-                                <button type="submit" class="btn-primary flex-1 py-1 px-2 rounded-md text-xs">
-                                    <i class="fas fa-plus mr-1"></i> Add Construction
-                                </button>
-                                <button type="button" id="clearAllConstruction" class="bg-gray-100 text-gray-700 py-1 px-2 rounded-md text-xs border border-gray-200 hover:bg-gray-50">
-                                    <i class="fas fa-trash-alt mr-1"></i> Clear
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="mt-3">
-                            <h3 class="text-xs font-medium text-gray-700 mb-1 flex items-center">
-                                <i class="fas fa-list-ul mr-1 text-gray-400"></i> Current Construction
-                            </h3>
-                            <div id="constructionList" class="compact-list border rounded-md">
-                                <div class="empty-state p-2 text-center text-gray-400 text-xs">
-                                    <i class="fas fa-hammer text-lg mb-1 text-gray-300"></i>
-                                    <p>No construction added</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Annulus Tab -->
-                    <div class="tab-content p-4 hidden" id="annulus-tab">
-                        <form id="annulusForm" class="compact-form space-y-2">
-                            <div class="grid grid-cols-3 gap-2">
-                                <div class="form-group">
-                                    <label for="annulusFromDepth">From (m)</label>
-                                    <input type="number" id="annulusFromDepth" step="0.5" min="0" class="input-field w-full" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="annulusToDepth">To (m)</label>
-                                    <input type="number" id="annulusToDepth" step="0.5" min="0" class="input-field w-full" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="annulusType">Type</label>
-                                    <select id="annulusType" class="input-field w-full" required>
-                                        <option value="" disabled selected>Select</option>
-                                        <option value="Grout" data-color="#6B7280">Grout</option>
-                                        <option value="Gravel" data-color="#92400E">Gravel</option>
-                                        <option value="Bentonite" data-color="#3F6212">Bentonite</option>
-                                        <option value="Cement" data-color="#9CA3AF">Cement</option>
-                                        <option value="Sand" data-color="#D97706">Sand</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2 pt-1">
-                                <button type="submit" class="btn-primary flex-1 py-1 px-2 rounded-md text-xs">
-                                    <i class="fas fa-plus mr-1"></i> Add Annulus
-                                </button>
-                                <button type="button" id="clearAllAnnulus" class="bg-gray-100 text-gray-700 py-1 px-2 rounded-md text-xs border border-gray-200 hover:bg-gray-50">
-                                    <i class="fas fa-trash-alt mr-1"></i> Clear
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="mt-3">
-                            <h3 class="text-xs font-medium text-gray-700 mb-1 flex items-center">
-                                <i class="fas fa-list-ul mr-1 text-gray-400"></i> Current Annulus
-                            </h3>
-                            <div id="annulusList" class="compact-list border rounded-md">
-                                <div class="empty-state p-2 text-center text-gray-400 text-xs">
-                                    <i class="fas fa-fill-drip text-lg mb-1 text-gray-300"></i>
-                                    <p>No annulus added</p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm text-slate-300">Current Shift</p>
+                        <p class="font-semibold text-lg" id="currentDateTime"></p>
                     </div>
                 </div>
             </div>
-            
-            <!-- Right Panel - Borehole Visualization -->
-            <div class="lg:col-span-3">
-                <div class="card p-4 h-full flex flex-col">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center">
-                            <div class="bg-indigo-100 p-1 rounded-lg mr-3">
-                                <i class="fas fa-chart-bar text-indigo-600 text-sm"></i>
+        </header>
+
+        <!-- Navigation -->
+        <div class="flex bg-slate-800 rounded-lg p-1 mb-0 md:mb-6">
+            <button id="logsNavBtn" class="flex-1 py-2 px-4 rounded-md font-medium text-center bg-slate-700 text-blue-300">
+                <i class="fas fa-clipboard-list mr-2"></i> Plod History
+            </button>
+            <button id="formNavBtn" class="flex-1 py-2 px-4 rounded-md font-medium text-center text-slate-300 hover:bg-slate-700">
+                <i class="fas fa-plus-circle mr-2"></i> New Plod
+            </button>
+            <button id="dashboardNavBtn" class="flex-1 py-2 px-4 rounded-md font-medium text-center text-slate-300 hover:bg-slate-700">
+                <i class="fas fa-chart-line mr-2"></i> Dashboard
+            </button>
+        </div>
+
+        <!-- Pages -->
+        <div id="pagesContainer">
+            <!-- Logs Table Page -->
+            <div id="logsPage" class="page active">
+                <!-- Data Table Section -->
+                <section>
+                    <div class="gradient-card rounded-xl p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                            <h2 class="text-2xl font-semibold text-purple-200 mb-4 md:mb-0">Drilling Log History</h2>
+                            <div class="w-full md:w-auto">
+                                <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                                    <select id="dateFilter" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <option value="all">All Dates</option>
+                                        <option value="today">Today</option>
+                                        <option value="week">This Week</option>
+                                        <option value="month">This Month</option>
+                                    </select>
+                                    <select id="rigFilter" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <option value="all">All Rigs</option>
+                                        <option value="Rig 1">Rig 1</option>
+                                        <option value="Rig 2">Rig 2</option>
+                                        <option value="Rig 3">Rig 3</option>
+                                        <option value="Rig 4">Rig 4</option>
+                                        <option value="Rig 5">Rig 5</option>
+                                        <option value="Rig 6">Rig 6</option>
+                                        <option value="Rig 7">Rig 7</option>
+                                        <option value="Rig 8">Rig 8</option>
+                                    </select>
+                                    <button id="exportBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg flex items-center">
+                                        <i class="fas fa-file-export mr-2"></i> Export CSV
+                                    </button>
+                                </div>
                             </div>
-                            <h2 class="text-base font-semibold text-gray-800">Borehole Schematic</h2>
                         </div>
-                        <div class="flex space-x-1">
-                            <button id="zoomIn" class="bg-gray-100 p-1 rounded-md text-gray-700 hover:bg-gray-200">
-                                <i class="fas fa-search-plus text-xs"></i>
-                            </button>
-                            <button id="zoomOut" class="bg-gray-100 p-1 rounded-md text-gray-700 hover:bg-gray-200">
-                                <i class="fas fa-search-minus text-xs"></i>
-                            </button>
-                            <button id="exportBtn" class="btn-primary py-1 px-3 rounded-md text-xs">
-                                <span class="export-text"><i class="fas fa-download mr-1"></i> Export</span>
-                                <span class="export-spinner"><i class="fas fa-spinner fa-spin"></i></span>
-                            </button>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-700">
+                                <thead class="bg-slate-800">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="date">
+                                            Date <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="shift">
+                                            Shift <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="crew">
+                                            Crew <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="holeId">
+                                            Hole ID <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="rig">
+                                            Rig # <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="rigType">
+                                            Rig Type <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider cursor-pointer sortable" data-column="meters">
+                                            Meters <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                            Activities
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logTableBody" class="bg-slate-800 divide-y divide-slate-700">
+                                    <!-- Table rows will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-4 text-sm text-slate-400">
+                            <div id="tableInfo">Showing 0 to 0 of 0 entries</div>
+                            <div class="flex space-x-2" id="pagination">
+                                <!-- Pagination will be added here -->
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="border rounded-lg p-3 bg-gray-50 shadow-inner flex-grow overflow-auto">
-                        <div id="boreholeWrapper" class="relative" style="min-height: 100%;">
-                            <div id="boreholeContainer" class="borehole-container">
-                                <!-- Depth scale on the left -->
-                                <div id="depthScale" class="depth-scale"></div>
-                                
-                                <!-- Geology on the left -->
-                                <div id="geologyLeft" class="geology-left"></div>
-                                
-                                <!-- Annulus construction (wider than bore construction) -->
-                                <div id="annulusConstruction" class="annulus-construction"></div>
-                                
-                                <!-- Bore construction in the center -->
-                                <div id="boreConstruction" class="bore-construction"></div>
-                                
-                                <!-- Water level -->
-                                <div id="waterLevel" class="water-level"></div>
-                                
-                                <!-- Geology on the right -->
-                                <div id="geologyRight" class="geology-right"></div>
-                                
-                                <!-- Ground level indicator -->
-                                <div id="groundLevel" class="ground-level"></div>
+                </section>
+            </div>
+
+            <!-- Form Page -->
+            <div id="formPage" class="page">
+                <!-- Form Section -->
+                <section id="formSection" class="mb-12">
+                    <div class="gradient-card rounded-xl p-6 mb-8">
+                        <h2 class="text-2xl font-semibold mb-6 text-purple-200">New Drilling Log Entry</h2>
+                        
+                        <form id="drillingLogForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="shiftDate" class="block text-sm font-medium text-slate-300 mb-1">Shift Date</label>
+                                    <input type="date" id="shiftDate" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label for="shiftType" class="block text-sm font-medium text-slate-300 mb-1">Shift Type</label>
+                                    <select id="shiftType" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <option value="">Select Shift</option>
+                                        <option value="Day">Day Shift</option>
+                                        <option value="Night">Night Shift</option>
+                                       
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="crewName" class="block text-sm font-medium text-slate-300 mb-1">Crew Name</label>
+                                    <input type="text" id="crewName" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter crew name">
+                                </div>
                             </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="holeId" class="block text-sm font-medium text-slate-300 mb-1">Hole ID</label>
+                                    <input type="text" id="holeId" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter hole ID">
+                                </div>
+                                <div>
+                                    <label for="rigNumber" class="block text-sm font-medium text-slate-300 mb-1">Rig Number</label>
+                                    <select id="rigNumber" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <option value="">Select Rig</option>
+                                        <option value="Rig 1">Rig 1</option>
+                                        <option value="Rig 2">Rig 2</option>
+                                        <option value="Rig 3">Rig 3</option>
+                                        <option value="Rig 4">Rig 4</option>
+                                        <option value="Rig 5">Rig 5</option>
+                                        <option value="Rig 6">Rig 6</option>
+                                        <option value="Rig 7">Rig 7</option>
+                                        <option value="Rig 8">Rig 8</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="rigType" class="block text-sm font-medium text-slate-300 mb-1">Rig Type</label>
+                                    <select id="rigType" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <option value="">Select Type</option>
+                                        <option value="RC">RC</option>
+                                        <option value="Diamond">Diamond</option>
+                                        <option value="Hydro">Hydro</option>
+                                        <option value="Sonic">Sonic</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="totalMeters" class="block text-sm font-medium text-slate-300 mb-1">Total Meters Drilled</label>
+                                    <input type="number" id="totalMeters" step="0.01" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter meters">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="notes" class="block text-sm font-medium text-slate-300 mb-1">Notes</label>
+                                <textarea id="notes" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Any additional notes..."></textarea>
+                            </div>
+
+                            <div class="border-t border-slate-700 pt-6">
+                                <h3 class="text-lg font-medium text-blue-200 mb-4">Activity Timeline</h3>
+                                <div id="activityContainer" class="space-y-4 max-h-96 overflow-y-auto scrollbar-hide p-2">
+                                    <!-- Activity items will be added here -->
+                                </div>
+                                <button type="button" id="addActivityBtn" class="mt-4 flex items-center text-blue-300 hover:text-blue-400 transition-colors">
+                                    <i class="fas fa-plus-circle mr-2"></i> Add Activity
+                                </button>
+                            </div>
+
+                            <div class="flex justify-end space-x-4 pt-4">
+                                <button type="reset" class="px-6 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-800 transition-colors">Clear Form</button>
+                                <button type="submit" id="formSubmitBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+                                    <i class="fas fa-save mr-2"></i> Save Log
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page">
+                <div class="gradient-card rounded-xl p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-6 text-purple-200">Drilling Analytics Dashboard</h2>
+                    
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Date Range</label>
+                            <select id="dashboardDateFilter" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="week">Last 7 Days</option>
+                                <option value="month">Last 30 Days</option>
+                                <option value="quarter">Last 90 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Rig Filter</label>
+                            <select id="dashboardRigFilter" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="all">All Rigs</option>
+                                <option value="Rig 1">Rig 1</option>
+                                <option value="Rig 2">Rig 2</option>
+                                <option value="Rig 3">Rig 3</option>
+                                <option value="Rig 4">Rig 4</option>
+                                <option value="Rig 5">Rig 5</option>
+                                <option value="Rig 6">Rig 6</option>
+                                <option value="Rig 7">Rig 7</option>
+                                <option value="Rig 8">Rig 8</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Shift Filter</label>
+                            <select id="dashboardShiftFilter" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="all">All Shifts</option>
+                                <option value="Day">Day Shift</option>
+                                <option value="Night">Night Shift</option>
+                                
+                            </select>
                         </div>
                     </div>
-                    
-                    <div class="mt-2 flex justify-between items-center text-xs text-gray-500">
-                        <div>
-                            <span id="totalDepth">Total depth: 30 m</span>
-                            <span id="waterDepthDisplay" class="ml-3 hidden"><i class="fas fa-tint text-blue-500"></i> Water at: <span class="font-medium">0</span> m</span>
+
+                    <!-- Charts -->
+                    <div class="space-y-6">
+                        <div class="gradient-card rounded-xl p-4">
+                            <h3 class="text-lg font-medium text-blue-200 mb-4">Meters Drilled Per Day</h3>
+                            <div class="relative h-full min-h-[300px] md:h-80">
+                                <canvas id="metersChart"></canvas>
+                            </div>
                         </div>
-                        <div>
-                            <button id="editModeBtn" class="text-indigo-600 hover:text-indigo-800">
-                                <i class="fas fa-edit mr-1"></i> Edit Mode
-                            </button>
+                        <div class="gradient-card rounded-xl p-4">
+                            <h3 class="text-lg font-medium text-purple-200 mb-4">Rig Performance Comparison (Meters per Shift)</h3>
+                            <div class="relative h-60 md:h-80">
+                                <canvas id="rigsChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Activity Modal -->
+        <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-purple-200">Add Activity</h3>
+                    <button id="closeModalBtn" class="text-slate-400 hover:text-slate-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="activityForm" class="space-y-4">
+                    <div>
+                        <label for="activityStartTime" class="block text-sm font-medium text-slate-300 mb-1">Start Time</label>
+                        <input type="time" id="activityStartTime" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="activityEndTime" class="block text-sm font-medium text-slate-300 mb-1">End Time</label>
+                        <input type="time" id="activityEndTime" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="activityType" class="block text-sm font-medium text-slate-300 mb-1">Activity Type</label>
+                        <select id="activityType" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">Select Activity</option>
+                            <option value="Drilling">Drilling</option>
+                            <option value="Weather - Standby">Weather</option>
+                            <option value="Casing">Casing</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Breakdown">Breakdown</option>
+                            <option value="Standby">Standby</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="activityDescription" class="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                        <textarea id="activityDescription" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Activity details..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" id="cancelActivityBtn" class="px-4 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">Add Activity</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Log Modal -->
+        <div id="viewLogModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-slate-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-blue-200">Drilling Log Details</h3>
+                    <button id="closeViewModalBtn" class="text-slate-400 hover:text-slate-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="logDetailsContent">
+                    <!-- Log details will be inserted here -->
+                </div>
+            </div>
+        </div>
 
     <script>
+        // Define default logs data
+        const defaultPlods = [
+            {
+                id: 1001,
+                date: new Date().toISOString().split('T')[0],
+                shift: 'Day',
+                crew: 'Crew Beta',
+                holeId: 'RC-001',
+                rig: 'Rig 1',
+                rigType: 'RC',
+                meters: 120.5,
+                notes: 'Initial test hole - good progress',
+                activities: [
+                    {
+                        id: 1,
+                        startTime: '06:00',
+                        endTime: '12:30',
+                        type: 'Drilling',
+                        description: 'Main drilling shift'
+                    },
+                    {
+                        id: 2,
+                        startTime: '12:30',
+                        endTime: '14:00',
+                        type: 'Maintenance',
+                        description: 'Bit replacement'
+                    }
+                ],
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 1002,
+                date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // Yesterday
+                shift: 'Night',
+                crew: 'Crew Beta',
+                holeId: 'RC-002',
+                rig: 'Rig 1',
+                rigType: 'Diamond',
+                meters: 93,
+                notes: 'Hard rock encountered',
+                activities: [
+                    {
+                        id: 3,
+                        startTime: '18:00',
+                        endTime: '06:00',
+                        type: 'Drilling',
+                        description: 'Night shift drilling'
+                    }
+                ],
+                createdAt: new Date(Date.now() - 86400000).toISOString()
+            },
+            {
+                id: 1003,
+                date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
+                shift: 'Day',
+                crew: 'Crew Gamma',
+                holeId: 'RC-003',
+                rig: 'Rig 1',
+                rigType: 'Hydro',
+                meters: 110,
+                notes: 'Excellent progress today',
+                activities: [
+                    {
+                        id: 4,
+                        startTime: '06:00',
+                        endTime: '17:00',
+                        type: 'Drilling',
+                        description: ''
+                    }
+                ],
+                createdAt: new Date(Date.now() - 172800000).toISOString()
+            },
+            {
+                id: 1003,
+                date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
+                shift: 'Day',
+                crew: 'Crew Gamma',
+                holeId: 'RC-004',
+                rig: 'Rig 1',
+                rigType: 'Hydro',
+                meters: 110,
+                notes: 'Excellent progress today',
+                activities: [
+                    {
+                        id: 4,
+                        startTime: '06:00',
+                        endTime: '17:00',
+                        type: 'Drilling',
+                        description: ''
+                    }
+                ],
+                createdAt: new Date(Date.now() - 172800000).toISOString()
+            }
+        ];
+
+        // Initialize variables - seed with defaults if no logs exist
+        if (localStorage.getItem('drillingLogs') === null) {
+            localStorage.setItem('drillingLogs', JSON.stringify(defaultPlods));
+        }
+        let logs = JSON.parse(localStorage.getItem('drillingLogs')) || [];
+        let currentActivityId = 5; // Start after default activity IDs
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let sortColumn = 'date';
+        let sortDirection = 'desc';
+
+        // DOM Elements
+        const drillingLogForm = document.getElementById('drillingLogForm');
+        const activityContainer = document.getElementById('activityContainer');
+        const addActivityBtn = document.getElementById('addActivityBtn');
+        const activityModal = document.getElementById('activityModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const activityForm = document.getElementById('activityForm');
+        const cancelActivityBtn = document.getElementById('cancelActivityBtn');
+        const viewLogModal = document.getElementById('viewLogModal');
+        const closeViewModalBtn = document.getElementById('closeViewModalBtn');
+        const logDetailsContent = document.getElementById('logDetailsContent');
+        const logTableBody = document.getElementById('logTableBody');
+        const dateFilter = document.getElementById('dateFilter');
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        const logsNavBtn = document.getElementById('logsNavBtn');
+        const formNavBtn = document.getElementById('formNavBtn');
+        const exportBtn = document.getElementById('exportBtn');
+
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            // DOM Elements
-            const layerForm = document.getElementById('layerForm');
-            const totalHoleDepthInput = document.getElementById('totalHoleDepth');
-            const waterDepthInput = document.getElementById('waterDepth');
-            const fromDepthInput = document.getElementById('fromDepth');
-            const toDepthInput = document.getElementById('toDepth');
-            const materialTypeSelect = document.getElementById('materialType');
-            const clearAllLayersBtn = document.getElementById('clearAllLayers');
-            const layerList = document.getElementById('layerList');
+            updateCurrentDateTime();
+            setInterval(updateCurrentDateTime, 60000); // Update every minute
             
-            const constructionForm = document.getElementById('constructionForm');
-            const constructionTypeSelect = document.getElementById('constructionType');
-            const constructionFromDepthInput = document.getElementById('constructionFromDepth');
-            const constructionToDepthInput = document.getElementById('constructionToDepth');
-            const clearAllConstructionBtn = document.getElementById('clearAllConstruction');
-            const constructionList = document.getElementById('constructionList');
+            loadLogs();
+            renderTable();
             
-            const annulusForm = document.getElementById('annulusForm');
-            const annulusTypeSelect = document.getElementById('annulusType');
-            const annulusFromDepthInput = document.getElementById('annulusFromDepth');
-            const annulusToDepthInput = document.getElementById('annulusToDepth');
-            const clearAllAnnulusBtn = document.getElementById('clearAllAnnulus');
-            const annulusList = document.getElementById('annulusList');
+            // Dashboard navigation
+            const dashboardNavBtn = document.getElementById('dashboardNavBtn');
+            dashboardNavBtn.addEventListener('click', () => {
+                showPage('dashboardPage');
+                // Always render charts when dashboard is shown
+                if (metersChart) metersChart.destroy();
+                if (rigsChart) rigsChart.destroy();
+                renderDashboardCharts();
+            });
             
-            const boreholeContainer = document.getElementById('boreholeContainer');
-            const boreholeWrapper = document.getElementById('boreholeWrapper');
-            const geologyLeft = document.getElementById('geologyLeft');
-            const annulusConstruction = document.getElementById('annulusConstruction');
-            const boreConstruction = document.getElementById('boreConstruction');
-            const waterLevel = document.getElementById('waterLevel');
-            const geologyRight = document.getElementById('geologyRight');
-            const depthScale = document.getElementById('depthScale');
-            const groundLevel = document.getElementById('groundLevel');
-            const zoomInBtn = document.getElementById('zoomIn');
-            const zoomOutBtn = document.getElementById('zoomOut');
-            const exportBtn = document.getElementById('exportBtn');
-            const editModeBtn = document.getElementById('editModeBtn');
-            const totalDepthSpan = document.getElementById('totalDepth');
-            const waterDepthDisplay = document.getElementById('waterDepthDisplay');
-            const boreIdInput = document.getElementById('boreId');
-            const generateBtn = document.getElementById('generateBtn');
+            // Dashboard filter event listeners
+            document.getElementById('dashboardDateFilter').addEventListener('change', renderDashboardCharts);
+            document.getElementById('dashboardRigFilter').addEventListener('change', renderDashboardCharts);
+            document.getElementById('dashboardShiftFilter').addEventListener('change', renderDashboardCharts);
             
-            // Tab navigation elements
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('shiftDate').value = today;
             
-            // State
-            let layers = [];
-            let constructionElements = [];
-            let annulusElements = [];
-            let segmentHeight = 8; // Smaller default segment height for compact view
-            let isEditMode = false;
-            let totalHoleDepth = parseFloat(totalHoleDepthInput.value);
-            let waterDepth = null;
-            let boreId = '';
+            // Navigation event listeners
+            logsNavBtn.addEventListener('click', () => showPage('logsPage'));
+            formNavBtn.addEventListener('click', () => showPage('formPage'));
+
+            // Export button event listener
+            exportBtn.addEventListener('click', exportToCSV);
+        });
+
+        // Export logs to CSV
+        function exportToCSV() {
+            if (logs.length === 0) {
+                showToast('No logs to export', 'error');
+                return;
+            }
+
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
             
-            // Initialize form fields
-            fromDepthInput.value = '0';
-            constructionFromDepthInput.value = '0';
-            annulusFromDepthInput.value = '0';
+            // Add header row
+            const headers = [
+                "Type", 
+                "Date", 
+                "Shift", 
+                "Crew", 
+                "Rig Number",
+                "Rig Type",
+                "Meters Drilled", 
+                "Notes",
+                "Activity Type",
+                "Activity Start",
+                "Activity End",
+                "Activity Description"
+            ];
+            csvContent += headers.join(",") + "\r\n";
             
-            // Tab navigation
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.dataset.tab;
-                    
-                    // Update active tab button
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                        if (content.id === `${tabId}-tab`) {
-                            content.classList.remove('hidden');
-                        }
+            // Add data rows
+            logs.forEach(log => {
+                // Add summary row for the plod
+                const summaryRow = [
+                    `"Plod Summary"`,
+                    `"${formatDate(log.date)}"`,
+                    `"${log.shift}"`,
+                    `"${log.crew}"`,
+                    `"${log.rig}"`,
+                    `"${log.rigType || ''}"`,
+                    `"${log.meters.toFixed(2)}"`,
+                    `"${log.notes || ''}"`,
+                    `""`,
+                    `""`,
+                    `""`,
+                    `""`
+                ];
+                csvContent += summaryRow.join(",") + "\r\n";
+                
+                // Add activity rows if they exist
+                if (log.activities.length > 0) {
+                    log.activities.forEach(activity => {
+                        const activityRow = [
+                            `"Activity"`,
+                            `""`,
+                            `""`,
+                            `""`,
+                            `""`,
+                            `""`,
+                            `""`,
+                            `"${activity.type}"`,
+                            `"${activity.startTime}"`,
+                            `"${activity.endTime}"`,
+                            `"${activity.description || ''}"`
+                        ];
+                        csvContent += activityRow.join(",") + "\r\n";
                     });
+                }
+                
+                // Add empty row as separator
+                csvContent += `"","","","","","","","","","",""\r\n`;
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `drilling_logs_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('CSV export started', 'success');
+        }
+
+        // Show specific page
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update navigation buttons
+            const navButtons = [logsNavBtn, formNavBtn];
+            navButtons.forEach(btn => {
+                btn.classList.remove('bg-slate-700', 'text-blue-300');
+                btn.classList.add('text-slate-300', 'hover:bg-slate-700');
+            });
+            
+            if (pageId === 'logsPage') {
+                logsNavBtn.classList.add('bg-slate-700', 'text-blue-300');
+                logsNavBtn.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            } else if (pageId === 'formPage') {
+                formNavBtn.classList.add('bg-slate-700', 'text-blue-300');
+                formNavBtn.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            }
+        }
+
+        // Update current date and time
+        function updateCurrentDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Track if we're editing an existing log
+        let currentEditLogId = null;
+
+        // Handle form submission
+        drillingLogForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const shiftDate = document.getElementById('shiftDate').value;
+            const shiftType = document.getElementById('shiftType').value;
+            const crewName = document.getElementById('crewName').value;
+            const holeId = document.getElementById('holeId').value;
+            const rigNumber = document.getElementById('rigNumber').value;
+            const totalMeters = parseFloat(document.getElementById('totalMeters').value);
+            const notes = document.getElementById('notes').value;
+            
+            // Check if we're editing an existing log
+            if (currentEditLogId) {
+                // Find the existing log
+                const existingLogIndex = logs.findIndex(l => l.id === currentEditLogId);
+                if (existingLogIndex !== -1) {
+                    // Update the existing log
+                    logs[existingLogIndex] = {
+                        ...logs[existingLogIndex],
+                        date: shiftDate,
+                        shift: shiftType,
+                        crew: crewName,
+                        rig: rigNumber,
+                        meters: totalMeters,
+                        notes: notes,
+                        activities: getActivitiesFromForm()
+                    };
+                    
+                    saveLogs();
+                    renderTable();
+                    showToast('Log entry updated successfully!', 'success');
+                    
+                    // Reset edit mode
+                    currentEditLogId = null;
+                    document.getElementById('formSubmitBtn').innerHTML = '<i class="fas fa-save mr-2"></i> Save Log';
+                    showPage('logsPage');
+                    return;
+                }
+            }
+            
+            // Collect activities
+            const activities = [];
+            const activityElements = document.querySelectorAll('.activity-item');
+            activityElements.forEach(el => {
+                activities.push({
+                    id: parseInt(el.dataset.id),
+                    startTime: el.querySelector('.activity-start-time').textContent,
+                    endTime: el.querySelector('.activity-end-time').textContent,
+                    type: el.querySelector('.activity-type').textContent,
+                    description: el.querySelector('.activity-description').textContent
                 });
             });
             
-            // Event listeners for total depth and water depth changes
-            generateBtn.addEventListener('click', function() {
-                totalHoleDepth = parseFloat(totalHoleDepthInput.value);
-                if (isNaN(totalHoleDepth) || totalHoleDepth <= 0) {
-                    totalHoleDepth = 30;
-                    totalHoleDepthInput.value = 30;
+            // Create new log entry
+            const newLog = {
+                id: Date.now(),
+                date: shiftDate,
+                shift: shiftType,
+                crew: crewName,
+                holeId: holeId,
+                rig: rigNumber,
+                rigType: rigType,
+                meters: totalMeters,
+                notes: notes,
+                activities: getActivitiesFromForm(),
+                createdAt: new Date().toISOString()
+            };
+            
+            // Add to logs array and save to localStorage
+            logs.unshift(newLog);
+            saveLogs();
+            
+            // Reset form and update UI
+            drillingLogForm.reset();
+            activityContainer.innerHTML = '';
+            document.getElementById('shiftDate').value = shiftDate; // Keep the same date
+            renderTable();
+            
+            // Show success message
+            showToast('Log entry saved successfully!', 'success');
+            
+            // Switch to logs page
+            showPage('logsPage');
+        });
+
+        // Add activity button click
+        addActivityBtn.addEventListener('click', function() {
+            activityModal.classList.remove('hidden');
+            activityForm.reset();
+            // Set start time to last activity's end time
+            document.getElementById('activityStartTime').value = lastActivityEndTime;
+        });
+
+        // Close modal buttons
+        closeModalBtn.addEventListener('click', function() {
+            activityModal.classList.add('hidden');
+        });
+
+        cancelActivityBtn.addEventListener('click', function() {
+            activityModal.classList.add('hidden');
+        });
+
+        closeViewModalBtn.addEventListener('click', function() {
+            viewLogModal.classList.add('hidden');
+        });
+
+        // Track last activity end time
+        let lastActivityEndTime = '06:00';
+
+        // Activity form submission
+        activityForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const startTime = document.getElementById('activityStartTime').value;
+            const endTime = document.getElementById('activityEndTime').value;
+            const type = document.getElementById('activityType').value;
+            const description = document.getElementById('activityDescription').value;
+            
+            // Update last end time for next activity
+            lastActivityEndTime = endTime;
+            
+            // Create activity element
+            const activityId = currentActivityId++;
+            const activityElement = document.createElement('div');
+            activityElement.className = 'activity-item bg-slate-800 border border-slate-700 rounded-lg p-4 flex justify-between items-start';
+            activityElement.dataset.id = activityId;
+            activityElement.innerHTML = `
+                <div>
+                    <div class="flex items-center mb-1">
+                        <span class="activity-type font-medium text-purple-300">${type}</span>
+                        <span class="mx-2 text-slate-500">|</span>
+                        <span class="activity-start-time text-blue-300">${formatTime(startTime)}</span>
+                        <span class="mx-2 text-slate-500">-</span>
+                        <span class="activity-end-time text-blue-300">${formatTime(endTime)}</span>
+                    </div>
+                    <p class="activity-description text-sm text-slate-300">${description}</p>
+                </div>
+                <button class="delete-activity text-red-400 hover:text-red-500 ml-4" data-id="${activityId}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            `;
+            
+            // Add to container
+            activityContainer.appendChild(activityElement);
+            
+            // Add event listener to delete button
+            activityElement.querySelector('.delete-activity').addEventListener('click', function() {
+                activityElement.remove();
+            });
+            
+            // Close modal and reset form
+            activityModal.classList.add('hidden');
+            activityForm.reset();
+        });
+
+        // Delete activity
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-activity') || e.target.closest('.delete-activity')) {
+                const button = e.target.classList.contains('delete-activity') ? e.target : e.target.closest('.delete-activity');
+                const id = parseInt(button.dataset.id);
+                const activityElement = document.querySelector(`.activity-item[data-id="${id}"]`);
+                if (activityElement) {
+                    activityElement.remove();
                 }
+            }
+        });
+
+        // Filter functionality
+        dateFilter.addEventListener('change', function() {
+            currentPage = 1;
+            renderTable();
+        });
+        
+        rigFilter.addEventListener('change', function() {
+            currentPage = 1;
+            renderTable();
+        });
+
+        // Sortable table headers
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const column = this.dataset.column;
                 
-                waterDepth = waterDepthInput.value === '' ? null : parseFloat(waterDepthInput.value);
-                
-                if (waterDepth !== null) {
-                    waterDepthDisplay.querySelector('span').textContent = waterDepth;
-                    waterDepthDisplay.classList.remove('hidden');
+                if (sortColumn === column) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
                 } else {
-                    waterDepthDisplay.classList.add('hidden');
+                    sortColumn = column;
+                    sortDirection = 'asc';
                 }
                 
-                totalDepthSpan.textContent = `Total depth: ${totalHoleDepth} m`;
-                generateBorehole();
+                // Update sort icons
+                sortableHeaders.forEach(h => {
+                    const icon = h.querySelector('i');
+                    if (h.dataset.column === column) {
+                        icon.className = sortDirection === 'asc' ? 'fas fa-sort-up ml-1' : 'fas fa-sort-down ml-1';
+                    } else {
+                        icon.className = 'fas fa-sort ml-1';
+                    }
+                });
                 
-                // Show success animation
-                this.innerHTML = '<i class="fas fa-check mr-1"></i> Updated!';
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Update';
-                }, 1500);
+                renderTable();
             });
-            
-            // Form submissions
-            layerForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const fromDepth = parseFloat(fromDepthInput.value);
-                const toDepth = parseFloat(toDepthInput.value);
-                const materialType = materialTypeSelect.value;
-                const selectedOption = materialTypeSelect.options[materialTypeSelect.selectedIndex];
-                const color = selectedOption.dataset.color;
-                
-                if (validateDepthInputs(fromDepth, toDepth, totalHoleDepth)) {
-                    layers.push({
-                        id: Date.now(),
-                        fromDepth,
-                        toDepth,
-                        materialType,
-                        color
-                    });
-                    
-                    updateLayerList();
-                    generateBorehole();
-                    
-                    // Reset form
-                    fromDepthInput.value = toDepth;
-                    toDepthInput.value = '';
-                    materialTypeSelect.selectedIndex = 0;
-                    
-                    // Show success animation
-                    const addBtn = layerForm.querySelector('button[type="submit"]');
-                    addBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Added!';
-                    setTimeout(() => {
-                        addBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add Layer';
-                    }, 1000);
-                }
+        });
+
+        // Helper function to get activities from form
+        function getActivitiesFromForm() {
+            const activities = [];
+            const activityElements = document.querySelectorAll('.activity-item');
+            activityElements.forEach(el => {
+                activities.push({
+                    id: parseInt(el.dataset.id),
+                    startTime: el.querySelector('.activity-start-time').textContent,
+                    endTime: el.querySelector('.activity-end-time').textContent,
+                    type: el.querySelector('.activity-type').textContent,
+                    description: el.querySelector('.activity-description').textContent
+                });
             });
-            
-            constructionForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+            return activities;
+        }
+
+        // View/edit log details
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('view-log') || e.target.closest('.view-log')) {
+                const button = e.target.classList.contains('view-log') ? e.target : e.target.closest('.view-log');
+                const logId = parseInt(button.dataset.id);
+                const log = logs.find(l => l.id === logId);
                 
-                const fromDepth = parseFloat(constructionFromDepthInput.value);
-                const toDepth = parseFloat(constructionToDepthInput.value);
-                const constructionType = constructionTypeSelect.value;
-                const selectedOption = constructionTypeSelect.options[constructionTypeSelect.selectedIndex];
-                const color = selectedOption.dataset.color;
-                
-                if (validateDepthInputs(fromDepth, toDepth, totalHoleDepth)) {
-                   constructionElements.push({
-  id: Date.now(),
-  fromDepth,
-  toDepth,
-  constructionType,
-  color
-});
-                    
-                    updateConstructionList();
-                    generateBorehole();
-                    
-                    // Reset form
-                    constructionFromDepthInput.value = toDepth;
-                    constructionToDepthInput.value = '';
-                    constructionTypeSelect.selectedIndex = 0;
-                    
-                    // Show success animation
-                    const addBtn = constructionForm.querySelector('button[type="submit"]');
-                    addBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Added!';
-                    setTimeout(() => {
-                        addBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add Construction';
-                    }, 1000);
+                if (log) {
+                    showLogDetails(log);
                 }
-            });
-            
-            annulusForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const fromDepth = parseFloat(annulusFromDepthInput.value);
-                const toDepth = parseFloat(annulusToDepthInput.value);
-                const annulusType = annulusTypeSelect.value;
-                const selectedOption = annulusTypeSelect.options[annulusTypeSelect.selectedIndex];
-                const color = selectedOption.dataset.color;
-                
-                if (validateDepthInputs(fromDepth, toDepth, totalHoleDepth)) {
-                    annulusElements.push({
-                        id: Date.now(),
-                        fromDepth,
-                        toDepth,
-                        annulusType,
-                        color
-                    });
-                    
-                    updateAnnulusList();
-                    generateBorehole();
-                    
-                    // Reset form
-                    annulusFromDepthInput.value = toDepth;
-                    annulusToDepthInput.value = '';
-                    annulusTypeSelect.selectedIndex = 0;
-                    
-                    // Show success animation
-                    const addBtn = annulusForm.querySelector('button[type="submit"]');
-                    addBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Added!';
-                    setTimeout(() => {
-                        addBtn.innerHTML = '<i class="fas fa-plus mr-1"></i> Add Annulus';
-                    }, 1000);
-                }
-            });
-            
-            // Clear buttons
-            clearAllLayersBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear all layers?')) {
-                    layers = [];
-                    updateLayerList();
-                    generateBorehole();
-                    fromDepthInput.value = '0';
-                    toDepthInput.value = '';
-                    
-                    // Show cleared animation
-                    this.innerHTML = '<i class="fas fa-check mr-1"></i> Cleared!';
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Clear';
-                    }, 1000);
-                }
-            });
-            
-            clearAllConstructionBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear all construction elements?')) {
-                    constructionElements = [];
-                    updateConstructionList();
-                    generateBorehole();
-                    constructionFromDepthInput.value = '0';
-                    constructionToDepthInput.value = '';
-                    
-                    // Show cleared animation
-                    this.innerHTML = '<i class="fas fa-check mr-1"></i> Cleared!';
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Clear';
-                    }, 1000);
-                }
-            });
-            
-            clearAllAnnulusBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear all annulus elements?')) {
-                    annulusElements = [];
-                    updateAnnulusList();
-                    generateBorehole();
-                    annulusFromDepthInput.value = '0';
-                    annulusToDepthInput.value = '';
-                    
-                    // Show cleared animation
-                    this.innerHTML = '<i class="fas fa-check mr-1"></i> Cleared!';
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Clear';
-                    }, 1000);
-                }
-            });
-            
-            // Zoom controls
-            zoomInBtn.addEventListener('click', function() {
-                if (segmentHeight < 15) {
-                    segmentHeight += 1;
-                    generateBorehole();
-                    
-                    // Show zoom animation
-                    this.classList.add('text-indigo-800');
-                    setTimeout(() => {
-                        this.classList.remove('text-indigo-800');
-                    }, 300);
-                }
-            });
-            
-            zoomOutBtn.addEventListener('click', function() {
-                if (segmentHeight > 4) {
-                    segmentHeight -= 1;
-                    generateBorehole();
-                    
-                    // Show zoom animation
-                    this.classList.add('text-indigo-800');
-                    setTimeout(() => {
-                        this.classList.remove('text-indigo-800');
-                    }, 300);
-                }
-            });
-            
-            // Edit mode toggle
-            editModeBtn.addEventListener('click', function() {
-                isEditMode = !isEditMode;
-                editModeBtn.innerHTML = isEditMode 
-                    ? '<i class="fas fa-check mr-1"></i> Save Changes' 
-                    : '<i class="fas fa-edit mr-1"></i> Edit Mode';
-                
-                if (!isEditMode) {
-                    saveEditChanges();
-                }
-                
-                updateLayerList();
-                updateConstructionList();
-                updateAnnulusList();
-            });
-            
-            // Export functionality
-            exportBtn.addEventListener('click', function() {
-                exportToPDF();
-            });
-            
-            // Helper functions
-            function validateDepthInputs(fromDepth, toDepth, maxDepth) {
-                if (isNaN(fromDepth) || isNaN(toDepth)) {
-                    showAlert('Please enter valid depth values', 'error');
-                    return false;
-                }
-                
-                if (fromDepth >= toDepth) {
-                    showAlert('"From Depth" must be less than "To Depth"', 'error');
-                    return false;
-                }
-                
-                if (toDepth > maxDepth) {
-                    showAlert('"To Depth" cannot exceed the Total Hole Depth', 'error');
-                    return false;
-                }
-                
-                return true;
             }
             
-            function showAlert(message, type) {
-                const alert = document.createElement('div');
-                alert.className = `fixed top-4 right-4 p-3 rounded-lg shadow-lg text-white text-sm ${
-                    type === 'error' ? 'bg-red-500' : 'bg-green-500'
-                }`;
-                alert.innerHTML = `
-                    <div class="flex items-center">
-                        <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} mr-2"></i>
-                        <span>${message}</span>
+            // Edit log
+            if (e.target.classList.contains('edit-log') || e.target.closest('.edit-log')) {
+                const button = e.target.classList.contains('edit-log') ? e.target : e.target.closest('.edit-log');
+                const logId = parseInt(button.dataset.id);
+                const log = logs.find(l => l.id === logId);
+                
+                if (log) {
+                    // Set edit mode
+                    currentEditLogId = logId;
+                    document.getElementById('formSubmitBtn').innerHTML = '<i class="fas fa-save mr-2"></i> Update Log';
+                    
+                    // Load log data into form
+                    document.getElementById('shiftDate').value = log.date;
+                    document.getElementById('shiftType').value = log.shift;
+                    document.getElementById('crewName').value = log.crew;
+                    document.getElementById('holeId').value = log.holeId || '';
+                    document.getElementById('rigNumber').value = log.rig;
+                    document.getElementById('rigType').value = log.rigType || '';
+                    document.getElementById('totalMeters').value = log.meters;
+                    document.getElementById('notes').value = log.notes || '';
+                    
+                    // Clear existing activities
+                    activityContainer.innerHTML = '';
+                    
+                    // Add activities to form
+                    log.activities.forEach(activity => {
+                        const activityId = currentActivityId++;
+                        const activityElement = document.createElement('div');
+                        activityElement.className = 'activity-item bg-slate-800 border border-slate-700 rounded-lg p-4 flex justify-between items-start';
+                        activityElement.dataset.id = activityId;
+                        activityElement.innerHTML = `
+                            <div>
+                                <div class="flex items-center mb-1">
+                                    <span class="activity-type font-medium text-purple-300">${activity.type}</span>
+                                    <span class="mx-2 text-slate-500">|</span>
+                                    <span class="activity-start-time text-blue-300">${activity.startTime}</span>
+                                    <span class="mx-2 text-slate-500">-</span>
+                                    <span class="activity-end-time text-blue-300">${activity.endTime}</span>
+                                </div>
+                                <p class="activity-description text-sm text-slate-300">${activity.description}</p>
+                            </div>
+                            <button class="delete-activity text-red-400 hover:text-red-500 ml-4" data-id="${activityId}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        `;
+                        activityContainer.appendChild(activityElement);
+                    });
+                    
+                    // Switch to form page
+                    showPage('formPage');
+                }
+            }
+            
+            // Delete log
+            if (e.target.classList.contains('delete-log') || e.target.closest('.delete-log')) {
+                const button = e.target.classList.contains('delete-log') ? e.target : e.target.closest('.delete-log');
+                const logId = parseInt(button.dataset.id);
+                
+                if (confirm('Are you sure you want to delete this log entry?')) {
+                    logs = logs.filter(l => l.id !== logId);
+                    saveLogs();
+                    renderTable();
+                    
+                    showToast('Log entry deleted successfully!', 'success');
+                }
+            }
+        });
+
+        // Save logs to localStorage
+        function saveLogs() {
+            localStorage.setItem('drillingLogs', JSON.stringify(logs));
+        }
+
+        // Load logs from localStorage
+        function loadLogs() {
+            const storedLogs = localStorage.getItem('drillingLogs');
+            if (storedLogs) {
+                logs = JSON.parse(storedLogs);
+            }
+        }
+
+        // Render the table with pagination
+        function renderTable() {
+            // Filter logs based on date filter and rig filter
+            let filteredLogs = [...logs];
+            const dateFilterValue = dateFilter.value;
+            const rigFilterValue = document.getElementById('rigFilter').value;
+            
+            if (dateFilterValue !== 'all') {
+                const now = new Date();
+                let startDate;
+                
+                switch (dateFilterValue) {
+                    case 'today':
+                        startDate = new Date(now.setHours(0, 0, 0, 0));
+                        break;
+                    case 'week':
+                        const day = now.getDay();
+                        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+                        startDate = new Date(now.setDate(diff));
+                        startDate.setHours(0, 0, 0, 0);
+                        break;
+                    case 'month':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                        break;
+                }
+                
+                filteredLogs = filteredLogs.filter(log => {
+                    const logDate = new Date(log.date);
+                    return logDate >= startDate;
+                });
+            }
+            
+            // Apply rig filter
+            if (rigFilterValue !== 'all') {
+                filteredLogs = filteredLogs.filter(log => log.rig === rigFilterValue);
+            }
+            
+            // Sort logs
+            filteredLogs.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch (sortColumn) {
+                    case 'date':
+                        aValue = new Date(a.date);
+                        bValue = new Date(b.date);
+                        break;
+                    case 'shift':
+                        aValue = a.shift;
+                        bValue = b.shift;
+                        break;
+                    case 'crew':
+                        aValue = a.crew;
+                        bValue = b.crew;
+                        break;
+                    case 'rig':
+                        aValue = a.rig;
+                        bValue = b.rig;
+                        break;
+                    case 'rigType':
+                        aValue = a.rigType;
+                        bValue = b.rigType;
+                        break;
+                    case 'meters':
+                        aValue = a.meters;
+                        bValue = b.meters;
+                        break;
+                    default:
+                        aValue = new Date(a.createdAt);
+                        bValue = new Date(b.createdAt);
+                }
+                
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return sortDirection === 'asc' 
+                        ? aValue.localeCompare(bValue)
+                        : bValue.localeCompare(aValue);
+                } else {
+                    return sortDirection === 'asc' 
+                        ? (aValue > bValue ? 1 : -1)
+                        : (aValue < bValue ? 1 : -1);
+                }
+            });
+            
+            // Pagination
+            const totalLogs = filteredLogs.length;
+            const totalPages = Math.ceil(totalLogs / rowsPerPage);
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, totalLogs);
+            const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
+            
+            // Clear table body
+            logTableBody.innerHTML = '';
+            
+            // Add rows
+            if (paginatedLogs.length === 0) {
+                const row = document.createElement('tr');
+                row.className = 'bg-slate-800';
+                row.innerHTML = `
+                    <td colspan="7" class="px-6 py-4 text-center text-slate-400">
+                        No logs found. Add your first drilling log above!
+                    </td>
+                `;
+                logTableBody.appendChild(row);
+            } else {
+                paginatedLogs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.className = 'group hover:bg-slate-700/50 transition-colors bg-slate-700/90 border-b-2 border-slate-700';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                            ${formatDate(log.date)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full ${getShiftBadgeClass(log.shift)}">
+                                ${log.shift}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                            ${log.crew}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                            ${log.holeId || '-'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                            ${log.rig}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                            ${log.rigType || '-'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-300">
+                            ${log.meters.toFixed(2)} m
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-300">
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                ${log.activities.slice(0, 3).map(activity => `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-300">
+                                        ${activity.type}
+                                    </span>
+                                `).join('')}
+                                ${log.activities.length > 3 ? `
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-500">
+                                        +${log.activities.length - 3} more
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="view-log text-blue-400 hover:text-blue-300 mr-2" data-id="${log.id}">
+                                <i class="fas fa-eye mr-1"></i>
+                            </button>
+                            <button class="edit-log text-yellow-400 hover:text-yellow-300 mr-2" data-id="${log.id}">
+                                <i class="fas fa-edit mr-1"></i>
+                            </button>
+                            <button class="delete-log text-red-400 hover:text-red-300" data-id="${log.id}">
+                                <i class="fas fa-trash-alt mr-1"></i>
+                            </button>
+                        </td>
+                    `;
+                    logTableBody.appendChild(row);
+                    
+                    // Add activity sub-rows
+                    log.activities.forEach(activity => {
+                        const subRow = document.createElement('tr');
+                        subRow.className = 'bg-slate-800/30 group-hover:bg-slate-800/60 transition-colors hover:bg-slate-700/70';
+                        subRow.innerHTML = `
+                            <td class="px-6 py-2 text-sm text-slate-400">
+                                <div class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
+                                    ${activity.type}
+                                </div>
+                            </td>
+                            <td class="px-6 py-2 text-sm text-slate-400">
+                                ${activity.startTime}
+                            </td>
+                            <td class="px-6 py-2 text-sm text-slate-400">
+                                ${activity.endTime}
+                            </td>
+                            <td class="px-6 py-2 text-sm text-slate-400">
+                                ${activity.description || 'No description'}
+                            </td>
+                            <td colspan="2"></td>
+                        `;
+                        logTableBody.appendChild(subRow);
+                    });
+                });
+            }
+            
+            // Update pagination info
+            document.getElementById('tableInfo').textContent = 
+                `Showing ${totalLogs === 0 ? 0 : startIndex + 1} to ${endIndex} of ${totalLogs} entries`;
+            
+            // Update pagination buttons
+            const paginationElement = document.getElementById('pagination');
+            paginationElement.innerHTML = '';
+            
+            if (totalPages > 1) {
+                // Previous button
+                const prevButton = document.createElement('button');
+                prevButton.className = `px-3 py-1 rounded ${currentPage === 1 ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`;
+                prevButton.textContent = 'Previous';
+                prevButton.disabled = currentPage === 1;
+                prevButton.addEventListener('click', function() {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderTable();
+                    }
+                });
+                paginationElement.appendChild(prevButton);
+                
+                // Page buttons
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                if (startPage > 1) {
+                    const firstButton = document.createElement('button');
+                    firstButton.className = 'px-3 py-1 rounded bg-slate-700 text-slate-300 hover:bg-slate-600';
+                    firstButton.textContent = '1';
+                    firstButton.addEventListener('click', function() {
+                        currentPage = 1;
+                        renderTable();
+                    });
+                    paginationElement.appendChild(firstButton);
+                    
+                    if (startPage > 2) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.className = 'px-2 py-1';
+                        ellipsis.textContent = '...';
+                        paginationElement.appendChild(ellipsis);
+                    }
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.className = `px-3 py-1 rounded ${currentPage === i ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`;
+                    pageButton.textContent = i;
+                    pageButton.addEventListener('click', function() {
+                        currentPage = i;
+                        renderTable();
+                    });
+                    paginationElement.appendChild(pageButton);
+                }
+                
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.className = 'px-2 py-1';
+                        ellipsis.textContent = '...';
+                        paginationElement.appendChild(ellipsis);
+                    }
+                    
+                    const lastButton = document.createElement('button');
+                    lastButton.className = 'px-3 py-1 rounded bg-slate-700 text-slate-300 hover:bg-slate-600';
+                    lastButton.textContent = totalPages;
+                    lastButton.addEventListener('click', function() {
+                        currentPage = totalPages;
+                        renderTable();
+                    });
+                    paginationElement.appendChild(lastButton);
+                }
+                
+                // Next button
+                const nextButton = document.createElement('button');
+                nextButton.className = `px-3 py-1 rounded ${currentPage === totalPages ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`;
+                nextButton.textContent = 'Next';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.addEventListener('click', function() {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderTable();
+                    }
+                });
+                paginationElement.appendChild(nextButton);
+            }
+        }
+
+        // Show log details in modal
+        function showLogDetails(log) {
+            const formattedDate = formatDate(log.date);
+            const formattedCreatedAt = new Date(log.createdAt).toLocaleString();
+            
+            let activitiesHtml = '';
+            log.activities.forEach(activity => {
+                activitiesHtml += `
+                    <div class="border-l-2 border-purple-500 pl-4 py-2 mb-3">
+                        <div class="flex items-center mb-1">
+                            <span class="font-medium text-purple-300">${activity.type}</span>
+                            <span class="mx-3 text-slate-500">|</span>
+                            <span class="text-blue-300">${activity.startTime}</span>
+                            <span class="mx-2 text-slate-500">-</span>
+                            <span class="text-blue-300">${activity.endTime}</span>
+                            <span class="ml-3 text-xs text-slate-400">
+                                (${calculateHours(activity.startTime, activity.endTime)} hrs)
+                            </span>
+                        </div>
+                        <p class="text-sm text-slate-300">${activity.description}</p>
                     </div>
                 `;
-                document.body.appendChild(alert);
+            });
+            
+            logDetailsContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-400 mb-1">Shift Date</h4>
+                        <p class="text-lg text-slate-100">${formattedDate}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-400 mb-1">Shift Type</h4>
+                        <span class="px-2 py-1 text-sm rounded-full ${getShiftBadgeClass(log.shift)}">
+                            ${log.shift}
+                        </span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-400 mb-1">Crew Name</h4>
+                        <p class="text-lg text-slate-100">${log.crew}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-400 mb-1">Rig Number</h4>
+                        <p class="text-lg text-slate-100">${log.rig}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-400 mb-1">Meters Drilled</h4>
+                        <p class="text-lg text-blue-300">${log.meters.toFixed(2)} m</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-400 mb-1">Recorded On</h4>
+                        <p class="text-sm text-slate-300">${formattedCreatedAt}</p>
+                    </div>
+                </div>
                 
-                setTimeout(() => {
-                    alert.classList.add('opacity-0');
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 300);
-                }, 3000);
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-slate-400 mb-1">Notes</h4>
+                    <p class="text-slate-300 whitespace-pre-line">${log.notes || 'No notes recorded'}</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-medium text-slate-400 mb-2">Activities</h4>
+                    ${activitiesHtml || '<p class="text-slate-400">No activities recorded</p>'}
+                </div>
+            `;
+            
+            viewLogModal.classList.remove('hidden');
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '';
+            const [hours, minutes] = timeString.split(':');
+            let hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            hour = hour % 12;
+            hour = hour ? hour : 12; // the hour '0' should be '12'
+            return `${hour}:${minutes} ${ampm}`;
+        }
+
+        function calculateHours(startTime, endTime) {
+            if (!startTime || !endTime) return 0;
+            
+            const [startH, startM] = startTime.split(':').map(Number);
+            const [endH, endM] = endTime.split(':').map(Number);
+            
+            const startTotal = startH + (startM / 60);
+            const endTotal = endH + (endM / 60);
+            
+            let hours = endTotal - startTotal;
+            if (hours < 0) hours += 24; // Handle overnight shifts
+            
+            return hours.toFixed(1);
+        }
+
+        function getShiftBadgeClass(shift) {
+            switch (shift) {
+                case 'Day': return 'bg-blue-500/20 text-blue-300';
+                case 'Night': return 'bg-purple-500/20 text-purple-300';
+                
+                default: return 'bg-slate-500/20 text-slate-300';
+            }
+        }
+
+        // Dashboard chart functions
+        let metersChart = null;
+        let rigsChart = null;
+
+        function renderDashboardCharts() {
+            const dateFilter = document.getElementById('dashboardDateFilter').value;
+            const rigFilter = document.getElementById('dashboardRigFilter').value;
+            const shiftFilter = document.getElementById('dashboardShiftFilter').value;
+            
+            // Filter logs based on dashboard filters
+            let filteredLogs = [...logs];
+            
+            // Apply date filter
+            const now = new Date();
+            let startDate;
+            
+            switch (dateFilter) {
+                case 'week':
+                    startDate = new Date(now.setDate(now.getDate() - 7));
+                    break;
+                case 'month':
+                    startDate = new Date(now.setMonth(now.getMonth() - 1));
+                    break;
+                case 'quarter':
+                    startDate = new Date(now.setMonth(now.getMonth() - 3));
+                    break;
+                case 'all':
+                    startDate = new Date(0); // Beginning of time
+                    break;
             }
             
-            function saveEditChanges() {
-                document.querySelectorAll('.layer-edit-input, .construction-edit-input, .annulus-edit-input').forEach(input => {
-                    const id = parseInt(input.dataset.id);
-                    const property = input.dataset.property;
-                    const value = input.value;
-                    
-                    // Update layers
-                    const layer = layers.find(l => l.id === id);
-                    if (layer) {
-                        layer[property] = property.includes('Depth') ? parseFloat(value) : value;
-                        
-                        // Update color if material type changed
-                        if (property === 'materialType') {
-                            const selectedOption = Array.from(materialTypeSelect.options).find(opt => opt.value === value);
-                            if (selectedOption && selectedOption.dataset.color) {
-                                layer.color = selectedOption.dataset.color;
+            filteredLogs = filteredLogs.filter(log => new Date(log.date) >= startDate);
+            
+            // Apply rig filter
+            if (rigFilter !== 'all') {
+                filteredLogs = filteredLogs.filter(log => log.rig === rigFilter);
+            }
+            
+            // Apply shift filter
+            if (shiftFilter !== 'all') {
+                filteredLogs = filteredLogs.filter(log => log.shift === shiftFilter);
+            }
+            
+            // Group data by date for meters chart
+            const dateGroups = {};
+            filteredLogs.forEach(log => {
+                const date = log.date;
+                if (!dateGroups[date]) {
+                    dateGroups[date] = 0;
+                }
+                dateGroups[date] += log.meters;
+            });
+            
+            // Prepare data for rigs chart
+            const rigGroups = {};
+            filteredLogs.forEach(log => {
+                const rig = log.rig;
+                if (!rigGroups[rig]) {
+                    rigGroups[rig] = 0;
+                }
+                rigGroups[rig] += log.meters;
+            });
+            
+            // Render meters chart
+            const metersCtx = document.getElementById('metersChart').getContext('2d');
+            const dates = Object.keys(dateGroups).sort();
+            const metersData = dates.map(date => dateGroups[date]);
+            
+            if (metersChart) {
+                metersChart.destroy();
+            }
+            
+            metersChart = new Chart(metersCtx, {
+                type: 'bar',
+                data: {
+                    labels: dates.map(date => formatDate(date)),
+                    datasets: [{
+                        label: 'Meters Drilled',
+                        data: metersData,
+                        backgroundColor: 'rgba(96, 165, 250, 0.7)',
+                        borderColor: 'rgba(96, 165, 250, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#94a3b8',
+                                font: {
+                                    size: 12
+                                },
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
                             }
                         }
                     }
-                    
-                    // Update construction elements
-                    const construction = constructionElements.find(c => c.id === id);
-                    if (construction) {
-                        construction[property] = property.includes('Depth') ? parseFloat(value) : value;
-                        
-                        // Update color if construction type changed
-                        if (property === 'constructionType') {
-                            const selectedOption = Array.from(constructionTypeSelect.options).find(opt => opt.value === value);
-                            if (selectedOption && selectedOption.dataset.color) {
-                                construction.color = selectedOption.dataset.color;
+                }
+            });
+            
+            // Render rigs line chart
+            const rigsCtx = document.getElementById('rigsChart').getContext('2d');
+            
+            // Group data by rig and date
+            const rigDataByDate = {};
+            filteredLogs.forEach(log => {
+                if (!rigDataByDate[log.rig]) {
+                    rigDataByDate[log.rig] = {};
+                }
+                rigDataByDate[log.rig][log.date] = (rigDataByDate[log.rig][log.date] || 0) + log.meters;
+            });
+            
+            // Get all unique dates
+            const allDates = [...new Set(filteredLogs.map(log => log.date))].sort();
+            
+            // Prepare datasets for each rig
+            const rigDatasets = [];
+            const rigColors = [
+                'rgba(255, 99, 132, 1)',     // Red
+                'rgba(54, 162, 235, 1)',     // Blue
+                'rgba(255, 206, 86, 1)',     // Yellow
+                'rgba(75, 192, 192, 1)',     // Teal
+                'rgba(153, 102, 255, 1)',    // Purple
+                'rgba(255, 159, 64, 1)',     // Orange
+                'rgba(0, 204, 102, 1)',      // Green
+                'rgba(199, 0, 57, 1)'        // Dark Red
+            ];
+            
+            Object.keys(rigDataByDate).forEach((rig, index) => {
+                const data = allDates.map(date => rigDataByDate[rig][date] || 0);
+                rigDatasets.push({
+                    label: rig,
+                    data: data,
+                    borderColor: rigColors[index % rigColors.length],
+                    backgroundColor: 'rgba(0, 0, 0, 0)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: false
+                });
+            });
+            
+            if (rigsChart) {
+                rigsChart.destroy();
+            }
+            
+            rigsChart = new Chart(rigsCtx, {
+                type: 'line',
+                data: {
+                    labels: allDates.map(date => formatDate(date)),
+                    datasets: rigDatasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#94a3b8',
+                                font: {
+                                    size: 12
+                                },
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
                             }
                         }
                     }
-                    
-                    // Update annulus elements
-                    const annulus = annulusElements.find(a => a.id === id);
-                    if (annulus) {
-                        annulus[property] = property.includes('Depth') ? parseFloat(value) : value;
-                        
-                        // Update color if annulus type changed
-                        if (property === 'annulusType') {
-                            const selectedOption = Array.from(annulusTypeSelect.options).find(opt => opt.value === value);
-                            if (selectedOption && selectedOption.dataset.color) {
-                                annulus.color = selectedOption.dataset.color;
-                            }
-                        }
-                    }
-                });
-                
-                generateBorehole();
-                showAlert('Changes saved successfully', 'success');
-            }
-            
-            function updateLayerList() {
-                if (layers.length === 0) {
-                    layerList.innerHTML = `
-                        <div class="empty-state p-2 text-center text-gray-400 text-xs">
-                            <i class="fas fa-layer-group text-lg mb-1 text-gray-300"></i>
-                            <p>No layers added</p>
-                        </div>
-                    `;
-                    return;
                 }
-                
-                const sortedLayers = [...layers].sort((a, b) => a.fromDepth - b.fromDepth);
-                layerList.innerHTML = '';
-                
-                sortedLayers.forEach(layer => {
-                    const layerElement = document.createElement('div');
-                    layerElement.className = 'compact-list-item hover:bg-gray-50 group';
-                    layerElement.dataset.id = layer.id;
-                    
-                    if (isEditMode) {
-                        layerElement.innerHTML = `
-                            <div class="grid grid-cols-4 gap-1 items-center">
-                                <div>
-                                    <input type="number" step="0.5" value="${layer.fromDepth}" 
-                                           data-id="${layer.id}" data-property="fromDepth"
-                                           class="layer-edit-input w-full text-xs border rounded p-1">
-                                </div>
-                                <div>
-                                    <input type="number" step="0.5" value="${layer.toDepth}" 
-                                           data-id="${layer.id}" data-property="toDepth"
-                                           class="layer-edit-input w-full text-xs border rounded p-1">
-                                </div>
-                                <div>
-                                    <select data-id="${layer.id}" data-property="materialType"
-                                            class="layer-edit-input w-full text-xs border rounded p-1">
-                                        ${Array.from(materialTypeSelect.options).map(option => 
-                                            `<option value="${option.value}" ${option.value === layer.materialType ? 'selected' : ''}
-                                             ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
-                                                ${option.text}
-                                            </option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                <div class="flex justify-end">
-                                    <button class="delete-layer text-red-500 hover:text-red-700 text-xs" data-id="${layer.id}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        layerElement.innerHTML = `
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center truncate">
-                                    <div class="color-preview mr-2" style="background-color: ${layer.color};"></div>
-                                    <div class="truncate">
-                                        <div class="font-medium truncate">${layer.materialType}</div>
-                                        <div class="text-xs text-gray-500">${layer.fromDepth}m - ${layer.toDepth}m</div>
-                                    </div>
-                                </div>
-                                <button class="delete-layer opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs" data-id="${layer.id}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        `;
-                    }
-                    
-                    layerList.appendChild(layerElement);
-                });
-                
-                // Add delete event listeners
-                document.querySelectorAll('.delete-layer').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = parseInt(this.dataset.id);
-                        layers = layers.filter(layer => layer.id !== id);
-                        updateLayerList();
-                        generateBorehole();
-                        showAlert('Layer removed', 'success');
-                    });
-                });
-            }
-            
-            function updateConstructionList() {
-                if (constructionElements.length === 0) {
-                    constructionList.innerHTML = `
-                        <div class="empty-state p-2 text-center text-gray-400 text-xs">
-                            <i class="fas fa-hammer text-lg mb-1 text-gray-300"></i>
-                            <p>No construction added</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const sortedConstruction = [...constructionElements].sort((a, b) => a.fromDepth - b.fromDepth);
-                constructionList.innerHTML = '';
-                
-                sortedConstruction.forEach(construction => {
-                    const constructionElement = document.createElement('div');
-                    constructionElement.className = 'compact-list-item hover:bg-gray-50 group';
-                    constructionElement.dataset.id = construction.id;
-                    
-                    if (isEditMode) {
-                        constructionElement.innerHTML = `
-                            <div class="grid grid-cols-4 gap-1 items-center">
-                                <div>
-                                    <input type="number" step="0.5" value="${construction.fromDepth}" 
-                                           data-id="${construction.id}" data-property="fromDepth"
-                                           class="construction-edit-input w-full text-xs border rounded p-1">
-                                </div>
-                                <div>
-                                    <input type="number" step="0.5" value="${construction.toDepth}" 
-                                           data-id="${construction.id}" data-property="toDepth"
-                                           class="construction-edit-input w-full text-xs border rounded p-1">
-                                </div>
-                                <div>
-                                    <select data-id="${construction.id}" data-property="constructionType"
-                                            class="construction-edit-input w-full text-xs border rounded p-1">
-                                        ${Array.from(constructionTypeSelect.options).map(option => 
-                                            `<option value="${option.value}" ${option.value === construction.constructionType ? 'selected' : ''}
-                                             ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
-                                                ${option.text}
-                                            </option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                <div class="flex justify-end">
-                                    <button class="delete-construction text-red-500 hover:text-red-700 text-xs" data-id="${construction.id}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        constructionElement.innerHTML = `
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center truncate>
-                                    <div class="color-preview mr-2" style="background-color: ${construction.color};"></div>
-                                    <div class="truncate">
-                                        <div class="font-medium truncate">${construction.constructionType}</div>
-                                        <div class="text-xs text-gray-500">${construction.fromDepth}m - ${construction.toDepth}m</div>
-                                    </div>
-                                </div>
-                                <button class="delete-construction opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs" data-id="${construction.id}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        `;
-                    }
-                    
-                    constructionList.appendChild(constructionElement);
-                });
-                
-                // Add delete event listeners
-                document.querySelectorAll('.delete-construction').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = parseInt(this.dataset.id);
-                        constructionElements = constructionElements.filter(construction => construction.id !== id);
-                        updateConstructionList();
-                        generateBorehole();
-                        showAlert('Construction element removed', 'success');
-                    });
-                });
-            }
-            
-            function updateAnnulusList() {
-                if (annulusElements.length === 0) {
-                    annulusList.innerHTML = `
-                        <div class="empty-state p-2 text-center text-gray-400 text-xs">
-                            <i class="fas fa-fill-drip text-lg mb-1 text-gray-300"></i>
-                            <p>No annulus added</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const sortedAnnulus = [...annulusElements].sort((a, b) => a.fromDepth - b.fromDepth);
-                annulusList.innerHTML = '';
-                
-                sortedAnnulus.forEach(annulus => {
-                    const annulusElement = document.createElement('div');
-                    annulusElement.className = 'compact-list-item hover:bg-gray-50 group';
-                    annulusElement.dataset.id = annulus.id;
-                    
-                    if (isEditMode) {
-                        annulusElement.innerHTML = `
-                            <div class="grid grid-cols-4 gap-1 items-center">
-                                <div>
-                                    <input type="number" step="0.5" value="${annulus.fromDepth}" 
-                                           data-id="${annulus.id}" data-property="fromDepth"
-                                           class="annulus-edit-input w-full text-xs border rounded p-1">
-                                </div>
-                                <div>
-                                    <input type="number" step="0.5" value="${annulus.toDepth}" 
-                                           data-id="${annulus.id}" data-property="toDepth"
-                                           class="annulus-edit-input w-full text-xs border rounded p-1">
-                                </div>
-                                <div>
-                                    <select data-id="${annulus.id}" data-property="annulusType"
-                                            class="annulus-edit-input w-full text-xs border rounded p-1">
-                                        ${Array.from(annulusTypeSelect.options).map(option => 
-                                            `<option value="${option.value}" ${option.value === annulus.annulusType ? 'selected' : ''}
-                                             ${option.dataset.color ? `data-color="${option.dataset.color}"` : ''}>
-                                                ${option.text}
-                                            </option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                                <div class="flex justify-end">
-                                    <button class="delete-annulus text-red-500 hover:text-red-700 text-xs" data-id="${annulus.id}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        annulusElement.innerHTML = `
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center truncate">
-                                    <div class="color-preview mr-2" style="background-color: ${annulus.color};"></div>
-                                    <div class="truncate">
-                                        <div class="font-medium truncate">${annulus.annulusType}</div>
-                                        <div class="text-xs text-gray-500">${annulus.fromDepth}m - ${annulus.toDepth}m</div>
-                                    </div>
-                                </div>
-                                <button class="delete-annulus opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs" data-id="${annulus.id}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        `;
-                    }
-                    
-                    annulusList.appendChild(annulusElement);
-                });
-                
-                // Add delete event listeners
-                document.querySelectorAll('.delete-annulus').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = parseInt(this.dataset.id);
-                        annulusElements = annulusElements.filter(annulus => annulus.id !== id);
-                        updateAnnulusList();
-                        generateBorehole();
-                        showAlert('Annulus element removed', 'success');
-                    });
-                });
-            }
-            
-            function generateBorehole() {
-                // Clear existing borehole
-                geologyLeft.innerHTML = '';
-                annulusConstruction.innerHTML = '';
-                boreConstruction.innerHTML = '';
-                waterLevel.innerHTML = '';
-                geologyRight.innerHTML = '';
-                depthScale.innerHTML = '';
-                groundLevel.innerHTML = '';
-                
-                // Find the minimum depth (for headworks that might be above ground)
-                let minDepth = 0;
-                constructionElements.forEach(construction => {
-                    if (construction.fromDepth < minDepth) minDepth = construction.fromDepth;
-                    if (construction.toDepth < minDepth) minDepth = construction.toDepth;
-                });
-                
-                // Calculate total height needed (from minDepth to totalHoleDepth)
-                const depthRange = totalHoleDepth - minDepth;
-                const containerHeight = depthRange * 2 * segmentHeight;
-                
-                // Set container heights
-                boreholeContainer.style.height = `${containerHeight}px`;
-                geologyLeft.style.height = `${containerHeight}px`;
-                annulusConstruction.style.height = `${containerHeight}px`;
-                boreConstruction.style.height = `${containerHeight}px`;
-                waterLevel.style.height = `${containerHeight}px`;
-                geologyRight.style.height = `${containerHeight}px`;
-                depthScale.style.height = `${containerHeight}px`;
-                
-                // Set wrapper height to match container
-                boreholeWrapper.style.height = `${containerHeight}px`;
-                
-                // Create ground level indicator (at 0m)
-                const groundLevelPosition = (0 - minDepth) * 2 * segmentHeight;
-                const groundLevelLine = document.createElement('div');
-                groundLevelLine.className = 'ground-level';
-                groundLevelLine.style.top = `${groundLevelPosition}px`;
-                
-                const groundLevelLabel = document.createElement('div');
-                groundLevelLabel.className = 'ground-level-label';
-                groundLevelLabel.style.top = `${groundLevelPosition}px`;
-                groundLevelLabel.textContent = 'Ground Level (0m)';
-                
-                groundLevel.appendChild(groundLevelLine);
-                groundLevel.appendChild(groundLevelLabel);
-                
-                // Create depth markers (every 10m)
-                for (let i = Math.ceil(minDepth / 10) * 10; i <= totalHoleDepth; i += 10) {
-                    const markerPosition = (i - minDepth) * 2 * segmentHeight;
-                    const marker = document.createElement('div');
-                    marker.className = 'depth-marker';
-                    marker.style.top = `${markerPosition}px`;
-                    marker.textContent = `${i}`;
-                    depthScale.appendChild(marker);
-                }
-                
-                // Create geology segments (left side)
-                for (let i = 0; i < depthRange * 2; i++) {
-                    const currentDepth = minDepth + (i * 0.5);
-                    const segment = document.createElement('div');
-                    segment.className = 'layer-segment';
-                    segment.style.height = `${segmentHeight}px`;
-                    
-                    // Find which layer this segment belongs to
-                    const matchingLayer = layers.find(layer => 
-                        currentDepth >= layer.fromDepth && currentDepth < layer.toDepth
-                    );
-                    
-                    segment.style.backgroundColor = matchingLayer 
-                        ? hexToRgba(matchingLayer.color, 0.8) 
-                        : 'rgba(243, 244, 246, 0.8)';
-                    
-                    geologyLeft.appendChild(segment);
-                }
-                
-                // Create geology segments (right side)
-                for (let i = 0; i < depthRange * 2; i++) {
-                    const currentDepth = minDepth + (i * 0.5);
-                    const segment = document.createElement('div');
-                    segment.className = 'layer-segment';
-                    segment.style.height = `${segmentHeight}px`;
-                    
-                    // Find which layer this segment belongs to
-                    const matchingLayer = layers.find(layer => 
-                        currentDepth >= layer.fromDepth && currentDepth < layer.toDepth
-                    );
-                    
-                    if (matchingLayer) {
-                        segment.style.backgroundColor = hexToRgba(matchingLayer.color, 0.8);
-                        
-                        // Add right label for the layer (only at the middle of the layer)
-                        const layerMiddleDepth = (matchingLayer.fromDepth + matchingLayer.toDepth) / 2;
-                        if (Math.abs(currentDepth - layerMiddleDepth) < 0.25) {
-                            const rightLabel = document.createElement('div');
-                            rightLabel.className = 'right-label';
-                            rightLabel.style.top = `${i * segmentHeight}px`;
-                            rightLabel.innerHTML = `
-                                <div class="font-medium">${matchingLayer.materialType}</div>
-                                <div class="text-xs text-gray-500">${matchingLayer.fromDepth}m - ${matchingLayer.toDepth}m</div>
-                            `;
-                            
-                            geologyRight.appendChild(rightLabel);
-                        }
-                    } else {
-                        segment.style.backgroundColor = 'rgba(243, 244, 246, 0.8)';
-                    }
-                    
-                    geologyRight.appendChild(segment);
-                }
-                
-                // Add annulus construction elements
-                annulusElements.forEach(annulus => {
-                    const fromPosition = (annulus.fromDepth - minDepth) * 2 * segmentHeight;
-                    const height = (annulus.toDepth - annulus.fromDepth) * 2 * segmentHeight;
-                    
-                    if (height <= 0) return;
-                    
-                    const annulusContainer = document.createElement('div');
-                    annulusContainer.className = 'absolute';
-                    annulusContainer.style.top = `${fromPosition}px`;
-                    annulusContainer.style.height = `${height}px`;
-                    annulusContainer.style.width = '80px';
-                    annulusContainer.style.left = '50%';
-                    annulusContainer.style.transform = 'translateX(-50%)';
-                    annulusContainer.style.backgroundColor = annulus.color;
-                    annulusContainer.style.borderLeft = '1px solid rgba(0,0,0,0.2)';
-                    annulusContainer.style.borderRight = '1px solid rgba(0,0,0,0.2)';
-                    annulusContainer.style.zIndex = '1';
-                    annulusContainer.style.borderRadius = '3px';
-                    
-                    // Add annulus label on the left side
-                    const label = document.createElement('div');
-                    label.className = 'annulus-label';
-                    label.style.top = `${height / 2 - 10}px`; // Center vertically
-                    label.innerHTML = `
-                        <div class="font-medium">${annulus.annulusType}</div>
-                        <div class="text-xs text-gray-500">${annulus.fromDepth}m - ${annulus.toDepth}m</div>
-                    `;
-                    
-                    annulusContainer.appendChild(label);
-                    annulusConstruction.appendChild(annulusContainer);
-                });
-                
-                // Add water level if specified
-                if (waterDepth !== null && waterDepth < totalHoleDepth) {
-                    const fromPosition = (waterDepth - minDepth) * 2 * segmentHeight;
-                    const height = (totalHoleDepth - waterDepth) * 2 * segmentHeight;
-                    
-                    if (height > 0) {
-                        const waterContainer = document.createElement('div');
-                        waterContainer.className = 'water-level';
-                        waterContainer.style.top = `${fromPosition}px`;
-                        waterContainer.style.height = `${height}px`;
-                        waterContainer.style.backgroundColor = 'rgba(0, 119, 255, 0.3)';
-                        waterContainer.style.borderLeft = '1px solid rgba(0, 119, 255, 0.7)';
-                        waterContainer.style.borderRight = '1px solid rgba(0, 119, 255, 0.7)';
-                        waterContainer.style.zIndex = '4';
-                        waterContainer.style.borderRadius = '3px';
-                        
-                        // Add water level label
-                        const label = document.createElement('div');
-                        label.className = 'water-level-label';
-                        label.style.top = '8px';
-                        label.innerHTML = `
-                            <i class="fas fa-tint mr-1"></i> Water Level
-                            <div class="text-xs">${waterDepth}m depth</div>
-                        `;
-                        waterContainer.appendChild(label);
-                        
-                        waterLevel.appendChild(waterContainer);
-                    }
-                }
-                
-                // Add construction elements
-                constructionElements.forEach(construction => {
-                    const fromPosition = (construction.fromDepth - minDepth) * 2 * segmentHeight;
-                    const height = (construction.toDepth - construction.fromDepth) * 2 * segmentHeight;
-                    
-                    if (height <= 0) return;
-                    
-                    const constructionContainer = document.createElement('div');
-                    constructionContainer.className = 'absolute';
-                    constructionContainer.style.top = `${fromPosition}px`;
-                    constructionContainer.style.height = `${height}px`;
-                    constructionContainer.style.width = '40px';
-                    constructionContainer.style.left = '50%';
-                    constructionContainer.style.transform = 'translateX(-50%)';
-                    constructionContainer.style.backgroundColor = construction.color;
-                    constructionContainer.style.borderLeft = '1px solid rgba(0,0,0,0.2)';
-                    constructionContainer.style.borderRight = '1px solid rgba(0,0,0,0.2)';
-                    constructionContainer.style.zIndex = '2';
-                    constructionContainer.style.borderRadius = '3px';
-                    
-                    // Add construction label
-                    const label = document.createElement('div');
-                    label.className = 'segment-label';
-                    label.innerHTML = `
-                        <div class="text-xs">${construction.constructionType}</div>
-                        <div class="text-2xs">${construction.fromDepth}m - ${construction.toDepth}m</div>
-                    `;
-                    constructionContainer.appendChild(label);
-                    
-                    boreConstruction.appendChild(constructionContainer);
-                });
-            }
-            
-            // Helper function to convert hex color to rgba with transparency
-            function hexToRgba(hex, alpha) {
-                const r = parseInt(hex.slice(1, 3), 16);
-                const g = parseInt(hex.slice(3, 5), 16);
-                const b = parseInt(hex.slice(5, 7), 16);
-                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-            }
-            
-      // Export to PDF function
-            function exportToPDF() {
-                // Show loading state
-                exportBtn.classList.add('exporting');
-                
-                // Get the borehole container
-                const element = document.getElementById('boreholeContainer');
-                
-                // Get the bore ID for filename
-                const boreId = document.getElementById('boreId').value || 'borehole';
-                
-                // Use html2canvas to capture the element as an image
-                html2canvas(element, {
-                    scale: 2, // Higher quality
-                    logging: false,
-                    useCORS: true,
-                    allowTaint: true,
-                    scrollX: 0,
-                    scrollY: -window.scrollY
-                }).then(canvas => {
-                    // Create a new jsPDF instance
-                    const { jsPDF } = window.jspdf;
-                    const pdf = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'mm'
-                    });
-                    
-                    // Calculate dimensions
-                    const imgData = canvas.toDataURL('image/png');
-                    const imgWidth = 190; // A4 width (210mm) with margins
-                    const pageHeight = 297; // A4 height (297mm)
-                    const imgHeight = canvas.height * imgWidth / canvas.width;
-                    
-                    // Add the image to the PDF
-                    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-                    
-                  // get the page width
-const pageWidth = pdf.internal.pageSize.getWidth();
+            });
+        }
 
-// Add title in the top-right corner
-pdf.setFontSize(10);
-pdf.setTextColor(40, 40, 40);
-pdf.text(
-  boreId,
-  pageWidth - 10,   // 10 mm from right edge
-  20,               // 20 mm down from top
-  { align: 'right' }
-);
-
-// Add current date also in the top-right
-const today = new Date();
-pdf.setFontSize(10);
-pdf.text(
-  `Generated on: ${today.toLocaleDateString()}`,
-  pageWidth - 10,   // same right margin
-  25,               // just below the title
-  { align: 'right' }
-);
-
-                    // Add footer
-                    pdf.setFontSize(8);
-                    pdf.setTextColor(100, 100, 100);
-                    pdf.text('© Borehole Schematic Generator', 105, 287, { align: 'center' });
-                    
-                    // Save the PDF
-                    pdf.save(`${boreId}_borehole_schematic.pdf`);
-                    
-                    // Hide loading state
-                    exportBtn.classList.remove('exporting');
-                    
-                    // Show success notification
-                    showAlert('PDF exported successfully', 'success');
-                }).catch(error => {
-                    console.error('Error generating PDF:', error);
-                    showAlert('Error generating PDF. Please try again.', 'error');
-                    exportBtn.classList.remove('exporting');
-                });
-            }
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg flex items-center ${
+                type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            } text-white`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                ${message}
+            `;
+            document.body.appendChild(toast);
             
-            // Initialize the borehole display
-            generateBorehole();
-        });
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
