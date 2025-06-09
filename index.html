@@ -415,7 +415,7 @@
                 crew: 'Crew Beta',
                 holeId: 'RC-002',
                 rig: 'Rig 1',
-                rigType: 'Diamond',
+                rigType: 'RC',
                 meters: 93,
                 notes: 'Hard rock encountered',
                 activities: [
@@ -436,7 +436,7 @@
                 crew: 'Crew Gamma',
                 holeId: 'RC-003',
                 rig: 'Rig 1',
-                rigType: 'Hydro',
+                rigType: 'RC',
                 meters: 110,
                 notes: 'Excellent progress today',
                 activities: [
@@ -451,15 +451,106 @@
                 createdAt: new Date(Date.now() - 172800000).toISOString()
             },
             {
-                id: 1003,
+                id: 1004,
                 date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
                 shift: 'Day',
                 crew: 'Crew Gamma',
                 holeId: 'RC-004',
                 rig: 'Rig 1',
-                rigType: 'Hydro',
+                rigType: 'RC',
                 meters: 110,
                 notes: 'Excellent progress today',
+                activities: [
+                    {
+                        id: 4,
+                        startTime: '06:00',
+                        endTime: '17:00',
+                        type: 'Drilling',
+                        description: ''
+                    }
+                ],
+                createdAt: new Date(Date.now() - 172800000).toISOString()
+            },
+            {
+                id: 1005,
+                date: new Date().toISOString().split('T')[0],
+                shift: 'Day',
+                crew: 'Crew Beta',
+                holeId: 'RC-006',
+                rig: 'Rig 2',
+                rigType: 'RC',
+                meters: 110.5,
+                notes: 'good progress',
+                activities: [
+                    {
+                        id: 1,
+                        startTime: '06:00',
+                        endTime: '12:30',
+                        type: 'Drilling',
+                        description: 'Main drilling shift'
+                    },
+                    {
+                        id: 2,
+                        startTime: '12:30',
+                        endTime: '14:00',
+                        type: 'Maintenance',
+                        description: 'Bit replacement'
+                    }
+                ],
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 1006,
+                date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // Yesterday
+                shift: 'Night',
+                crew: 'Crew Beta',
+                holeId: 'RC-007',
+                rig: 'Rig 2',
+                rigType: 'RC',
+                meters: 85,
+                notes: 'Hard rock encountered',
+                activities: [
+                    {
+                        id: 3,
+                        startTime: '18:00',
+                        endTime: '06:00',
+                        type: 'Drilling',
+                        description: 'Night shift drilling'
+                    }
+                ],
+                createdAt: new Date(Date.now() - 86400000).toISOString()
+            },
+            {
+                id: 1007,
+                date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
+                shift: 'Day',
+                crew: 'Crew Gamma',
+                holeId: 'RC-008',
+                rig: 'Rig 2',
+                rigType: 'RC',
+                meters: 125,
+                notes: 'Excellent progress today',
+                activities: [
+                    {
+                        id: 4,
+                        startTime: '06:00',
+                        endTime: '17:00',
+                        type: 'Drilling',
+                        description: ''
+                    }
+                ],
+                createdAt: new Date(Date.now() - 172800000).toISOString()
+            },
+            {
+                id: 1008,
+                date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
+                shift: 'Day',
+                crew: 'Crew Gamma',
+                holeId: 'RC-009',
+                rig: 'Rig 2',
+                rigType: 'RC',
+                meters: 68,
+                notes: 'Water issues',
                 activities: [
                     {
                         id: 4,
